@@ -8,11 +8,18 @@ import java.util.Random;
  */
 public class Variable extends Expression {
 
-    String name;
-    int value;
-    int min_value;
-    int max_value;
+    protected String name;
+    private int value;
+    private int min_value;
+    private int max_value;
 
+    protected boolean is_boolean(){
+        if(max_value - min_value == 1){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
     protected Variable(String n, int min, int max, Random r){
         name = n;
