@@ -81,7 +81,7 @@ public class Gintpsolver {
      * @return the constraint generated
      */
     public Constraint gen_constraint(Expression lp, Constraint.Type t, double c){
-        Constraint constraint = new Constraint(lp, t, c);
+        Constraint constraint = new Constraint(lp, t, c, rand);
         constraints.add(constraint);
         return  constraint;
     }
