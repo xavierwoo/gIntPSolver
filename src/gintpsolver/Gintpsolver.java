@@ -112,7 +112,7 @@ public class Gintpsolver {
     private void print_problem_summary() {
         String str = "******************************\nProblem Overview:\n";
         if (max_obj != null) {
-            str += "\tA maximize problem\n";
+            str += "\tA Maximize Problem\n";
         } else if (min_obj != null) {
             str += "\tA Minimize Problem\n";
         } else {
