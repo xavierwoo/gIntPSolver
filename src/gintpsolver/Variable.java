@@ -32,21 +32,13 @@ public class Variable extends Expression {
 
     @Override
     protected Move find_dec_mv(){
-        if(value > min_value) {
-            return new Move(this, -1);
-        }else{
-            return null;
-        }
+        return value > min_value ? new Move(this, -1) : null;
     }
 
 
     @Override
     protected Move find_inc_mv(){
-        if(value < max_value){
-            return new Move(this, 1);
-        }else{
-            return null;
-        }
+        return value <max_value ? new Move(this, 1) : null;
     }
 
 
@@ -58,11 +50,8 @@ public class Variable extends Expression {
                 mvs.add(new Move(this, d));
             }
         }
-        if(mvs.isEmpty()){
-            return null;
-        }else{
-            return mvs;
-        }
+
+        return mvs.isEmpty() ? null : mvs;
     }
 
     @Override
