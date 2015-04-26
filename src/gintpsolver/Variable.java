@@ -1,5 +1,6 @@
 package gintpsolver;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -14,11 +15,7 @@ public class Variable extends Expression {
     private int max_value;
 
     protected boolean is_boolean(){
-        if(max_value - min_value == 1){
-            return true;
-        }else{
-            return false;
-        }
+        return max_value - min_value == 1;
     }
 
     protected Variable(String n, int min, int max, Random r){
@@ -42,12 +39,29 @@ public class Variable extends Expression {
         }
     }
 
+
     @Override
     protected Move find_inc_mv(){
         if(value < max_value){
             return new Move(this, 1);
         }else{
             return null;
+        }
+    }
+
+
+    @Override
+    protected ArrayList<Move> find_mv(double min_delta, double max_delta) {
+        ArrayList<Move> mvs = new ArrayList<>();
+        for(int d = (int)min_delta; d <= (int)max_delta; d++){
+            if(value + d >= min_value && value +d <= max_value){
+                mvs.add(new Move(this, d));
+            }
+        }
+        if(mvs.isEmpty()){
+            return null;
+        }else{
+            return mvs;
         }
     }
 
