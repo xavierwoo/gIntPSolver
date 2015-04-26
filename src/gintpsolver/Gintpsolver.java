@@ -2,6 +2,7 @@ package gintpsolver;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -10,12 +11,12 @@ import java.util.Random;
  */
 public class Gintpsolver {
 
-    private Random rand = new Random(0);
+    private Random rand = new Random(2);
 
     private ArrayList<Variable> vars = new ArrayList<>();
     private ArrayList<Constraint> constraints = new ArrayList<>();
     private ArrayList<Expression> non_var_exps = new ArrayList<>();
-    private HashSet<Constraint> unsatisfied_constraints = new HashSet<>();
+    private HashSet<Constraint> unsat_constraints = new HashSet<>();
 
     private Expression max_obj = null;
     private Expression min_obj = null;
@@ -91,13 +92,34 @@ public class Gintpsolver {
 
     private void initialization() {
         for (Constraint c : constraints) {
-            if (!c.is_satisfied()) unsatisfied_constraints.add(c);
+            if (!c.is_satisfied()) unsat_constraints.add(c);
         }
     }
 
+    private Constraint get_random_un_sat_c(){
+        int index = rand.nextInt(unsat_constraints.size());
+        int i=0;
+        for(Constraint c : unsat_constraints){
+            if(i==index){
+                return c;
+            }
+            i++;
+        }
+        return null;
+    }
+
+    private ArrayList<Move> find_ease_c_move(){
+        ArrayList<Move> mvs = null;
+        Constraint c_to_confort = get_random_un_sat_c();
+        mvs = c_to_confort.find_all_ease_moves();
+
+        return null;
+    }
+
     private void ease_constraint() {
-        while (!unsatisfied_constraints.isEmpty()) {
-            System.out.println();
+        ArrayList<Move> mvs;
+        while (!unsat_constraints.isEmpty()) {
+            mvs = find_ease_c_move();
         }
     }
 
@@ -137,6 +159,6 @@ public class Gintpsolver {
     public void solve() {
         initialization();
         print_problem_summary();
-        //ease_constraint();
+        ease_constraint();
     }
 }

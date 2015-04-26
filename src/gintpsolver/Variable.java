@@ -14,15 +14,15 @@ public class Variable extends Expression {
     private int min_value;
     private int max_value;
 
-    protected boolean is_boolean(){
-        return max_value - min_value == 1;
-    }
-
-    protected Variable(String n, int min, int max, Random r){
+    protected Variable(String n, int min, int max, Random r) {
         name = n;
         min_value = min;
         max_value = max;
         value = min_value + r.nextInt(max_value - min_value + 1);
+    }
+
+    protected boolean is_boolean() {
+        return max_value - min_value == 1;
     }
 
     @Override
@@ -31,22 +31,22 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected Move find_dec_mv(){
+    protected Move find_dec_mv() {
         return value > min_value ? new Move(this, -1) : null;
     }
 
 
     @Override
-    protected Move find_inc_mv(){
-        return value <max_value ? new Move(this, 1) : null;
+    protected Move find_inc_mv() {
+        return value < max_value ? new Move(this, 1) : null;
     }
 
 
     @Override
     protected ArrayList<Move> find_mv(double min_delta, double max_delta) {
         ArrayList<Move> mvs = new ArrayList<>();
-        for(int d = (int)min_delta; d <= (int)max_delta; d++){
-            if(value + d >= min_value && value +d <= max_value){
+        for (int d = (int) min_delta; d <= (int) max_delta; d++) {
+            if (d != 0 && value + d >= min_value && value + d <= max_value) {
                 mvs.add(new Move(this, d));
             }
         }
@@ -55,7 +55,7 @@ public class Variable extends Expression {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return name;
     }
 }

@@ -1,5 +1,6 @@
 package gintpsolver;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -67,7 +68,7 @@ public class Constraint {
         return get_penalty() == 0;
     }
 
-    protected Move find_ease_move() {
+    protected Move find_ease_move_randomly() {
         if (is_satisfied()) {
             return null;
         }
@@ -75,21 +76,32 @@ public class Constraint {
             case GEQ:
                 return left_exp.find_inc_mv();
             case EQ:
-                double cmp = Double.compare(left_exp.get_value(), c);
-                if (cmp > 0) {
-                    return left_exp.find_dec_mv();
-                } else {
-                    return left_exp.find_inc_mv();
-                }
+                return Double.compare(left_exp.get_value(), c) > 0 ?
+                        left_exp.find_dec_mv() : left_exp.find_inc_mv();
             case LEQ:
                 return left_exp.find_dec_mv();
             case NEQ:
-                if(rand.nextInt(2) == 0){
-                    return left_exp.find_dec_mv();
-                }else{
-                    return left_exp.find_inc_mv();
-                }
+                return rand.nextInt(2) == 0 ? left_exp.find_dec_mv() : left_exp.find_inc_mv();
+            default:
+                throw new UnsupportedOperationException("WTF!");
         }
-        return null;
+    }
+
+    protected ArrayList<Move> find_all_ease_moves() {
+        if (is_satisfied()) {
+            return null;
+        }
+        switch (t) {
+            case GEQ:
+                return left_exp.find_mv(0, c - left_exp.get_value());
+            case EQ:
+                return Double.compare(left_exp.get_value(), c) > 0 ?
+                        left_exp.find_mv(c - left_exp.get_value(), 0)
+                        : left_exp.find_mv(0, c - left_exp.get_value());
+            case LEQ:
+                return left_exp.find_mv(c-left_exp.get_value(), 0);
+            default:
+                throw new UnsupportedOperationException("WTF!");
+        }
     }
 }
