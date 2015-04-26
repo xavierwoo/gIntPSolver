@@ -18,12 +18,6 @@ public abstract class Expression {
      */
     abstract protected Move find_dec_mv();
 
-    /**
-     * Find moves that can decrease the value more than delta
-     * @param delta the change value
-     * @return
-     */
-    abstract protected ArrayList<Move> find_dec_mv(double delta);
 
     /**
      *
@@ -32,9 +26,10 @@ public abstract class Expression {
     abstract protected Move find_inc_mv();
 
     /**
-     * Find moves that can increase the value more than delta;
-     * @param delta the change value
+     *  Find move that can change value from min_delta to max_delta
+     * @param min_delta minimum change value
+     * @param max_delta maximum change value
      * @return moves found
      */
-    abstract protected ArrayList<Move> find_inc_mv(double delta);
+    abstract protected ArrayList<Move> find_mv(double min_delta, double max_delta);
 }

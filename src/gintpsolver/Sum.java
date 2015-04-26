@@ -1,5 +1,6 @@
 package gintpsolver;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -100,6 +101,25 @@ public class Sum extends Expression {
             }
         }
         return mv;
+    }
+
+    @Override
+    protected ArrayList<Move> find_mv(double min_delta, double max_delta) {
+        ArrayList<Move> mvs = new ArrayList<>();
+        for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
+            Expression e = entry.getKey();
+            double para = entry.getValue();
+            ArrayList<Move> sub_mvs = null;
+            if(para > 0){
+                sub_mvs = e.find_mv(min_delta/para, max_delta/para);
+            }else{
+                sub_mvs = e.find_mv(max_delta/para, min_delta/para);
+            }
+            if(sub_mvs!=null){
+                mvs.addAll(sub_mvs);
+            }
+        }
+        return mvs.isEmpty() ? null : mvs;
     }
 
     @Override
