@@ -11,7 +11,6 @@ import gintpsolver.Variable;
 public class Main {
 
     static public void main(String[] args){
-        System.out.print("hello");
 
         Gintpsolver solver = new Gintpsolver();
 
