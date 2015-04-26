@@ -112,21 +112,21 @@ public class Gintpsolver {
     private void print_problem_summary() {
         String str = "******************************\nProblem Overview:\n";
         if (max_obj != null) {
-            str += "\tA maximize problem\n";
+            str += "\tA Maximize Problem\n";
         } else if (min_obj != null) {
-            str += "\tA minimize problem\n";
+            str += "\tA Minimize Problem\n";
         } else {
-            str += "\tA constraint satisfaction problem\n";
+            str += "\tA Constraint Satisfaction problem\n";
         }
 
         int num_b = count_boolean_vars();
         if (num_b > 0) {
-            str += "\tBoolean variables : " + num_b;
+            str += "\tBoolean Variables : " + num_b;
         }
         if (num_b != vars.size()) {
-            str += "\tInteger variables : " + (vars.size() - num_b);
+            str += "\tInteger Variables : " + (vars.size() - num_b);
         }
-        str += "\n\tExpression nodes : " + non_var_exps.size();
+        str += "\n\tExpression Nodes : " + non_var_exps.size();
         str += "\n******************************\n";
         System.out.println(str);
     }
