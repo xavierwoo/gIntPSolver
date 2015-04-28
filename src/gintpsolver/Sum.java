@@ -12,7 +12,7 @@ import java.util.Random;
 public class Sum extends Expression {
 
     private double value = 0;
-    protected boolean is_dirty = true;
+
 
     protected HashMap<Expression, Double> exp_elems = new HashMap<>();
 

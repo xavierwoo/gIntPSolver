@@ -7,6 +7,7 @@ import java.util.ArrayList;
  */
 public abstract class Expression {
 
+    protected boolean is_dirty = true;
     protected ArrayList<Expression> in_exp = new ArrayList<>();
     protected Constraint in_constraint = null;
 

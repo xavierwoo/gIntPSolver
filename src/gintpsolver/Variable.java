@@ -10,7 +10,7 @@ import java.util.Random;
 public class Variable extends Expression {
 
     protected String name;
-    private int value;
+    protected int value;
     private int min_value;
     private int max_value;
 

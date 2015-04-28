@@ -2,7 +2,6 @@ package gintpsolver;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -18,8 +17,11 @@ public class Gintpsolver {
     private ArrayList<Expression> non_var_exps = new ArrayList<>();
     private HashSet<Constraint> unsat_constraints = new HashSet<>();
 
-    private Expression max_obj = null;
-    private Expression min_obj = null;
+    private int obj_type = 0;
+    private Expression obj = null;
+
+    private Move mv_just_made = null;
+
 
     /**
      * Set the objective to be maximization
@@ -27,8 +29,8 @@ public class Gintpsolver {
      * @param e the objective function
      */
     public void set_max_objective(Expression e) {
-        max_obj = e;
-        min_obj = null;
+        obj = e;
+        obj_type = 1;
     }
 
     /**
@@ -96,30 +98,112 @@ public class Gintpsolver {
         }
     }
 
-    private Constraint get_random_un_sat_c(){
+    private Constraint get_random_un_sat_c() {
         int index = rand.nextInt(unsat_constraints.size());
-        int i=0;
-        for(Constraint c : unsat_constraints){
-            if(i==index){
+        int i = 0;
+        for (Constraint c : unsat_constraints) {
+            if (i == index) {
                 return c;
             }
             i++;
         }
-        return null;
+        throw new UnsupportedOperationException("get_random_un_sat_c() error!");
     }
 
-    private ArrayList<Move> find_ease_c_move(){
-        ArrayList<Move> mvs = null;
+    private void recursive_calc_exp(Expression exp, Delta delta) {
+        exp.is_dirty = true;
+        if (exp.in_constraint != null) {
+            exp.in_constraint.is_dirty = true;
+            if (exp.in_constraint.is_satisfied() && unsat_constraints.contains(exp.in_constraint)) {
+                unsat_constraints.remove(exp.in_constraint);
+                delta.delta_unsat_c--;
+            } else if (!exp.in_constraint.is_satisfied() && !unsat_constraints.contains(exp.in_constraint)) {
+                unsat_constraints.add(exp.in_constraint);
+                delta.delta_unsat_c++;
+            }
+        }
+        for (Expression e : exp.in_exp) {
+            recursive_calc_exp(e, delta);
+        }
+    }
+
+    /**
+     * implement a move and return the delta value
+     * @param mv move
+     * @return the change value that the move caused
+     */
+    private Delta make_move(Move mv) {
+
+        Delta delta = new Delta();
+
+        delta.delta_obj = 0-obj.get_value();
+        mv.var.value += mv.delta;
+        recursive_calc_exp(mv.var, delta);
+        delta.delta_obj += obj.get_value();
+
+        mv_just_made = mv;
+        return delta;
+    }
+
+    private void undo_move() {
+        mv_just_made.var.value -= mv_just_made.delta;
+        Delta delta = new Delta();
+        recursive_calc_exp(mv_just_made.var, delta);
+        mv_just_made = null;
+    }
+
+    private MovePack eject_chain(Move head_mv,int depth, int max_depth) {
+        MovePack mvp = new MovePack();
+        mvp.mvs.add(head_mv);
+
+        //make move
+        mvp.delta = make_move(head_mv);
+
+        if(depth < max_depth) {
+
+
+            //Add code to generate the ejection chain
+
+
+        }
+
+        //roll back move
+        undo_move();
+
+        return mvp;
+    }
+
+    private ArrayList<Move> find_ease_c_move() {
+        ArrayList<Move> mvs;
         Constraint c_to_confort = get_random_un_sat_c();
         mvs = c_to_confort.find_all_ease_moves();
 
-        return null;
+        MovePack best_mvp = new MovePack();
+        best_mvp.delta = new Delta();
+        int count = 1;
+        for(Move mv : mvs){
+            MovePack mvp = eject_chain(mv, 1, 1);
+
+            double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
+            if(cmp_v < 0){
+                best_mvp = mvp;
+                count = 1;
+            }else if(cmp_v == 0 && rand.nextInt(++count) == 0){
+                best_mvp = mvp;
+            }
+        }
+
+        return best_mvp.mvs;
     }
 
     private void ease_constraint() {
         ArrayList<Move> mvs;
         while (!unsat_constraints.isEmpty()) {
             mvs = find_ease_c_move();
+
+            for(Move mv : mvs){
+                make_move(mv);
+            }
         }
     }
 
@@ -133,9 +217,9 @@ public class Gintpsolver {
 
     private void print_problem_summary() {
         String str = "******************************\nProblem Overview:\n";
-        if (max_obj != null) {
+        if (obj_type == 1) {
             str += "\tA Maximize Problem\n";
-        } else if (min_obj != null) {
+        } else if (obj_type == -1) {
             str += "\tA Minimize Problem\n";
         } else {
             str += "\tA Constraint Satisfaction problem\n";
