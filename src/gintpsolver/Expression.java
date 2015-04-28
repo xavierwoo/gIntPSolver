@@ -14,20 +14,30 @@ public abstract class Expression {
     abstract protected double get_value();
 
     /**
-     *
      * @return A random move that can decrease the expression value
      */
     abstract protected Move find_dec_mv();
 
+    /**
+     * Find moves that decrease the value
+     * @return the moves found
+     */
+    abstract protected ArrayList<Move> find_all_dec_1_mv();
 
     /**
-     *
      * @return A random move that can increase the expression value
      */
     abstract protected Move find_inc_mv();
 
     /**
-     *  Find move that can change value from min_delta to max_delta
+     * Find moves that increase the value
+     * @return the moves found
+     */
+    abstract protected ArrayList<Move> find_all_inc_1_mv();
+
+    /**
+     * Find move that can change value from min_delta to max_delta
+     *
      * @param min_delta minimum change value
      * @param max_delta maximum change value
      * @return moves found

@@ -8,7 +8,7 @@ import java.util.Random;
  * Created by xavierwoo on 2015/4/25.
  */
 public class Constraint {
-    static public enum Type {
+    public enum Type {
         GEQ, EQ, LEQ, NEQ
     }
 

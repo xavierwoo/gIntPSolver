@@ -84,6 +84,21 @@ public class Sum extends Expression {
     }
 
     @Override
+    protected ArrayList<Move> find_all_dec_1_mv() {
+        ArrayList<Move> mvs = new ArrayList<>();
+        for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
+            Expression exp = entry.getKey();
+            double para = entry.getValue();
+            ArrayList<Move> submvs;
+            submvs = para > 0 ? exp.find_all_dec_1_mv() : exp.find_all_inc_1_mv();
+            if (submvs != null){
+                mvs.addAll(submvs);
+            }
+        }
+        return mvs.isEmpty() ? null : mvs;
+    }
+
+    @Override
     protected Move find_inc_mv() {
         Move mv = null;
         int count = 0;
@@ -104,17 +119,28 @@ public class Sum extends Expression {
     }
 
     @Override
+    protected ArrayList<Move> find_all_inc_1_mv() {
+        ArrayList<Move> mvs = new ArrayList<>();
+        for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
+            Expression exp = entry.getKey();
+            double para = entry.getValue();
+            ArrayList<Move> submvs;
+            submvs = para > 0 ? exp.find_all_inc_1_mv() : exp.find_all_dec_1_mv();
+            if(submvs != null){
+                mvs.addAll(submvs);
+            }
+        }
+        return mvs.isEmpty() ? null : mvs;
+    }
+
+    @Override
     protected ArrayList<Move> find_mv(double min_delta, double max_delta) {
         ArrayList<Move> mvs = new ArrayList<>();
         for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
             Expression e = entry.getKey();
             double para = entry.getValue();
-            ArrayList<Move> sub_mvs = null;
-            if(para > 0){
-                sub_mvs = e.find_mv(min_delta/para, max_delta/para);
-            }else{
-                sub_mvs = e.find_mv(max_delta/para, min_delta/para);
-            }
+            ArrayList<Move> sub_mvs;
+            sub_mvs = para > 0 ? e.find_mv(min_delta / para, max_delta / para) : e.find_mv(max_delta / para, min_delta / para);
             if(sub_mvs!=null){
                 mvs.addAll(sub_mvs);
             }
@@ -132,32 +158,16 @@ public class Sum extends Expression {
                 if(!str.isEmpty()){
                     str += " +";
                 }
-                if(exp.getClass() == Variable.class){
-                    str += " " + exp.toString();
-                }else{
-                    str += " ( " + exp.toString() + " )";
-                }
+                str += exp.getClass() == Variable.class ? " " + exp.toString() : " ( " + exp.toString() + " )";
             }else if(para == -1){
-                if(exp.getClass() == Variable.class){
-                    str += " -" + exp.toString();
-                }else{
-                    str += " -( " + exp.toString() + " )";
-                }
+                str += exp.getClass() == Variable.class ? " -" + exp.toString() : " -( " + exp.toString() + " )";
             }else if(para > 0){
                 if(!str.isEmpty()){
                     str += " +";
                 }
-                if(exp.getClass() == Variable.class){
-                    str += " " + para + " " + exp.toString();
-                }else{
-                    str += " " + para + "( " + exp.toString() + " )";
-                }
+                str += exp.getClass() == Variable.class ? " " + para + " " + exp.toString() : " " + para + "( " + exp.toString() + " )";
             }else if(para < 0){
-                if(exp.getClass() == Variable.class){
-                    str += " " + para + " " + exp.toString();
-                }else{
-                    str += " " + para + "( " + exp.toString() + " )";
-                }
+                str += exp.getClass() == Variable.class ? " " + para + " " + exp.toString() : " " + para + "( " + exp.toString() + " )";
             }
         }
         return str;

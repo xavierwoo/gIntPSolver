@@ -173,10 +173,15 @@ public class Gintpsolver {
         return mvp;
     }
 
+
+    /**
+     * Find moves that can comfort unsatisfied constraints
+     * @return the moves
+     */
     private ArrayList<Move> find_ease_c_move() {
         ArrayList<Move> mvs;
-        Constraint c_to_confort = get_random_un_sat_c();
-        mvs = c_to_confort.find_all_ease_moves();
+        Constraint c_to_comfort = get_random_un_sat_c();
+        mvs = c_to_comfort.find_all_ease_moves();
 
         MovePack best_mvp = new MovePack();
         best_mvp.delta = new Delta();
@@ -189,6 +194,35 @@ public class Gintpsolver {
                 best_mvp = mvp;
                 count = 1;
             }else if(cmp_v == 0 && rand.nextInt(++count) == 0){
+                best_mvp = mvp;
+            }
+        }
+
+        return best_mvp.mvs;
+    }
+
+    /**
+     * Find moves that can improve the objective value
+     * @return the moves
+     */
+    private ArrayList<Move> find_improving_move(){
+        if(obj_type == 0){
+            return null;
+        }
+        ArrayList<Move> mvs;
+        mvs = obj_type == 1 ? obj.find_all_inc_1_mv() : obj.find_all_dec_1_mv();
+
+        MovePack best_mvp = new MovePack();
+        best_mvp.delta = new Delta();
+        int count = 1;
+        for(Move mv : mvs){
+            MovePack mvp = eject_chain(mv, 1, 1);
+
+            double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
+            if(cmp_v < 0){
+                best_mvp = mvp;
+                count = 1;
+            }else if (cmp_v == 0 && rand.nextInt(++count)==0){
                 best_mvp = mvp;
             }
         }

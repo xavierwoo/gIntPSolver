@@ -35,10 +35,32 @@ public class Variable extends Expression {
         return value > min_value ? new Move(this, -1) : null;
     }
 
+    @Override
+    protected ArrayList<Move> find_all_dec_1_mv() {
+        ArrayList<Move> mvs = null;
+        Move mv = find_dec_mv();
+        if(mv != null){
+            mvs = new ArrayList<>();
+            mvs.add(mv);
+        }
+        return mvs;
+    }
+
 
     @Override
     protected Move find_inc_mv() {
         return value < max_value ? new Move(this, 1) : null;
+    }
+
+    @Override
+    protected ArrayList<Move> find_all_inc_1_mv() {
+        ArrayList<Move> mvs = null;
+        Move mv = find_inc_mv();
+        if(mv != null){
+            mvs = new ArrayList<>();
+            mvs.add(mv);
+        }
+        return mvs;
     }
 
 
