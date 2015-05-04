@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
+ * The constraint not equal
  * Created by xavierwoo on 2015/5/4.
  */
 public class ConstraintNEQ extends Constraint {
@@ -38,12 +39,17 @@ public class ConstraintNEQ extends Constraint {
     @Override
     protected ArrayList<Move> find_all_ease_moves() {
         if (is_satisfied()) {
-            return new ArrayList<Move>();
+            return new ArrayList<>();
         }
         ArrayList<Move> mvs = new ArrayList<>();
 
         mvs.addAll(left_exp.find_all_dec_1_mv());
         mvs.addAll(left_exp.find_all_inc_1_mv());
         return mvs;
+    }
+
+    @Override
+    public String toString(){
+        return left_exp.toString() + "!=" + c;
     }
 }

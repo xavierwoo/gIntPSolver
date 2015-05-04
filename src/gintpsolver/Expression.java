@@ -3,6 +3,7 @@ package gintpsolver;
 import java.util.ArrayList;
 
 /**
+ * Expression object
  * Created by xavierwoo on 2015/4/25.
  */
 public abstract class Expression {

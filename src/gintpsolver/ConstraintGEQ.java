@@ -1,9 +1,9 @@
 package gintpsolver;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
+ * The constraint great equal than
  * Created by xavierwoo on 2015/5/4.
  */
 public class ConstraintGEQ extends Constraint {
@@ -37,8 +37,13 @@ public class ConstraintGEQ extends Constraint {
     @Override
     protected ArrayList<Move> find_all_ease_moves() {
         if (is_satisfied()) {
-            return new ArrayList<Move>();
+            return new ArrayList<>();
         }
         return left_exp.find_mv(0, c - left_exp.get_value());
+    }
+
+    @Override
+    public String toString(){
+        return left_exp.toString() + ">=" + c;
     }
 }

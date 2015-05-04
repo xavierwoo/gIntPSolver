@@ -3,6 +3,7 @@ package gintpsolver;
 import java.util.ArrayList;
 
 /**
+ * The constraint equal
  * Created by xavierwoo on 2015/5/4.
  */
 public class ConstraintEQ extends Constraint{
@@ -37,10 +38,15 @@ public class ConstraintEQ extends Constraint{
     @Override
     protected ArrayList<Move> find_all_ease_moves() {
         if (is_satisfied()) {
-            return new ArrayList<Move>();
+            return new ArrayList<>();
         }
         return Double.compare(left_exp.get_value(), c) > 0 ?
                 left_exp.find_mv(c - left_exp.get_value(), 0)
                 : left_exp.find_mv(0, c - left_exp.get_value());
+    }
+
+    @Override
+    public String toString(){
+        return left_exp.toString() + "==" + c;
     }
 }

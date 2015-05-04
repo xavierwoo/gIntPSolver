@@ -217,9 +217,6 @@ public class Gintpsolver {
      * @return the moves
      */
     private ArrayList<Move> find_improving_move(){
-        if(obj_type == 0){
-            return null;
-        }
         ArrayList<Move> mvs;
         mvs = obj_type == 1 ? obj.find_all_inc_1_mv() : obj.find_all_dec_1_mv();
 
