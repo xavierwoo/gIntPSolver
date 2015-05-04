@@ -230,6 +230,15 @@ public class Gintpsolver {
         return best_mvp.mvs;
     }
 
+    private void improve_obj(){
+        ArrayList<Move> mvs;
+        mvs = find_improving_move();
+
+        for(Move mv : mvs){
+            make_move(mv);
+        }
+    }
+
     private void ease_constraint() {
         ArrayList<Move> mvs;
         while (!unsat_constraints.isEmpty()) {
@@ -278,5 +287,6 @@ public class Gintpsolver {
         initialization();
         print_problem_summary();
         ease_constraint();
+        improve_obj();
     }
 }
