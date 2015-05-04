@@ -21,18 +21,18 @@ public class Main {
         Sum exp1 = solver.gen_sum();
         exp1.add_element(x2, 1);
         exp1.add_element(x3, 1);
-        solver.gen_constraint(exp1, Constraint.Type.LEQ, 1);
+        solver.subject_to_LEQ(exp1, 1);
 
         Sum exp2 = solver.gen_sum();
         exp2.add_element(x1, 1);
         exp2.add_element(x3, 1);
-        solver.gen_constraint(exp2, Constraint.Type.LEQ, 1);
+        solver.subject_to_LEQ(exp2, 1);
 
         Sum exp3 = solver.gen_sum();
         exp3.add_element(x1, 1);
         exp3.add_element(x2, 1);
         exp3.add_element(x3, -1);
-        solver.gen_constraint(exp3, Constraint.Type.GEQ, 0);
+        solver.subject_to_GEQ(exp3, 0);
 
         Sum obj = solver.gen_sum();
         obj.add_element(x1, 1);

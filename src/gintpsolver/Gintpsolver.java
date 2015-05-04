@@ -78,16 +78,27 @@ public class Gintpsolver {
         return false;
     }
 
-    /**
-     * Generate a constraint
-     *
-     * @param lp the expression on the left
-     * @param t  the constraint type
-     * @param c  the constant on the right
-     * @return the constraint generated
-     */
-    public Constraint gen_constraint(Expression lp, Constraint.Type t, double c) {
-        Constraint constraint = new Constraint(lp, t, c, rand);
+
+    public Constraint subject_to_GEQ(Expression lp, double c){
+        Constraint constraint = new ConstraintGEQ(lp, c);
+        constraints.add(constraint);
+        return constraint;
+    }
+
+    public Constraint subject_to_EQ(Expression lp, double c){
+        Constraint constraint = new ConstraintEQ(lp, c);
+        constraints.add(constraint);
+        return constraint;
+    }
+
+    public Constraint subject_to_LEQ(Expression lp, double c){
+        Constraint constraint = new ConstraintLEQ(lp, c);
+        constraints.add(constraint);
+        return constraint;
+    }
+
+    public Constraint subject_to_NEQ(Expression lp, double c){
+        Constraint constraint = new ConstraintNEQ(lp, c, rand);
         constraints.add(constraint);
         return constraint;
     }
