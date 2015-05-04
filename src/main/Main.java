@@ -5,14 +5,16 @@ import gintpsolver.Gintpsolver;
 import gintpsolver.Sum;
 import gintpsolver.Variable;
 
+import java.io.IOException;
+
 /**
  * Created by xavierwoo on 2015/4/25.
  */
 public class Main {
 
-    static public void main(String[] args){
+    static public void main(String[] args) throws IOException {
 
-        Gintpsolver solver = new Gintpsolver();
+        Gintpsolver solver = new Gintpsolver("test");
 
         Variable x1 = solver.gen_variable("x1");
         Variable x2 = solver.gen_variable("x2");

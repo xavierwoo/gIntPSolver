@@ -1,7 +1,12 @@
 package gintpsolver;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -22,6 +27,49 @@ public class Gintpsolver {
 
     private Move mv_just_made = null;
 
+    private String problem_name;
+
+    /**
+     * Create a solver
+     * @param pn the problem name
+     */
+    public Gintpsolver(String pn){
+        problem_name = pn;
+        File dir = new File(pn);
+        dir.mkdir();
+    }
+
+    private void write_solution() throws IOException {
+        String solution_file = obj_type != 0 ?
+                problem_name + "/solution_" + obj.get_value() + ".txt"
+                : problem_name + "/solution" + ".txt";
+        FileWriter outFile = new FileWriter(solution_file);
+        PrintWriter printWriter = new PrintWriter(outFile);
+
+        if(obj_type != 0){
+            printWriter.println("Objective:\t" + obj.get_value());
+            printWriter.println();
+        }
+
+        for(Variable v : vars){
+            printWriter.println(v.name + "\t" + v.value);
+        }
+
+        if(unsat_constraints.isEmpty()){
+            outFile.close();
+            return;
+        }
+
+        printWriter.println();
+        printWriter.println();
+        printWriter.println();
+        printWriter.println("Unsatisfied constraints:");
+
+        for(Constraint c : unsat_constraints){
+            printWriter.println(c);
+        }
+        outFile.close();
+    }
 
     /**
      * Set the objective to be maximization
@@ -78,25 +126,48 @@ public class Gintpsolver {
         return false;
     }
 
-
+    /**
+     * Create a constraint that lp is greater than c
+     * @param lp the expression
+     * @param c the constant
+     * @return the constraint created
+     */
     public Constraint subject_to_GEQ(Expression lp, double c){
         Constraint constraint = new ConstraintGEQ(lp, c);
         constraints.add(constraint);
         return constraint;
     }
 
+    /**
+     * Create a constraint that lp is equal to c
+     * @param lp the expression
+     * @param c the constant
+     * @return the constraint created
+     */
     public Constraint subject_to_EQ(Expression lp, double c){
         Constraint constraint = new ConstraintEQ(lp, c);
         constraints.add(constraint);
         return constraint;
     }
 
+    /**
+     * Create a constraint that lp is less than c
+     * @param lp the expression
+     * @param c the constant
+     * @return the constraint created
+     */
     public Constraint subject_to_LEQ(Expression lp, double c){
         Constraint constraint = new ConstraintLEQ(lp, c);
         constraints.add(constraint);
         return constraint;
     }
 
+    /**
+     * Create a constraint that lp is not equal to c
+     * @param lp the expression
+     * @param c the constant
+     * @return the constraint created
+     */
     public Constraint subject_to_NEQ(Expression lp, double c){
         Constraint constraint = new ConstraintNEQ(lp, c, rand);
         constraints.add(constraint);
@@ -291,10 +362,12 @@ public class Gintpsolver {
     /**
      * Solve the problem
      */
-    public void solve() {
+    public void solve() throws IOException {
         initialization();
         print_problem_summary();
         ease_constraint();
+        write_solution();
         improve_obj();
+        write_solution();
     }
 }

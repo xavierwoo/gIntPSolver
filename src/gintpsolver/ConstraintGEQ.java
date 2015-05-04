@@ -44,6 +44,6 @@ public class ConstraintGEQ extends Constraint {
 
     @Override
     public String toString(){
-        return left_exp.toString() + ">=" + c;
+        return left_exp.toString() + " >= " + c;
     }
 }
