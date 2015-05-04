@@ -91,11 +91,9 @@ public class Sum extends Expression {
             double para = entry.getValue();
             ArrayList<Move> submvs;
             submvs = para > 0 ? exp.find_all_dec_1_mv() : exp.find_all_inc_1_mv();
-            if (submvs != null){
-                mvs.addAll(submvs);
-            }
+            mvs.addAll(submvs);
         }
-        return mvs.isEmpty() ? null : mvs;
+        return mvs;
     }
 
     @Override
@@ -126,11 +124,9 @@ public class Sum extends Expression {
             double para = entry.getValue();
             ArrayList<Move> submvs;
             submvs = para > 0 ? exp.find_all_inc_1_mv() : exp.find_all_dec_1_mv();
-            if(submvs != null){
-                mvs.addAll(submvs);
-            }
+            mvs.addAll(submvs);
         }
-        return mvs.isEmpty() ? null : mvs;
+        return mvs;
     }
 
     @Override
@@ -141,11 +137,9 @@ public class Sum extends Expression {
             double para = entry.getValue();
             ArrayList<Move> sub_mvs;
             sub_mvs = para > 0 ? e.find_mv(min_delta / para, max_delta / para) : e.find_mv(max_delta / para, min_delta / para);
-            if(sub_mvs!=null){
-                mvs.addAll(sub_mvs);
-            }
+            mvs.addAll(sub_mvs);
         }
-        return mvs.isEmpty() ? null : mvs;
+        return mvs;
     }
 
     @Override

@@ -37,10 +37,9 @@ public class Variable extends Expression {
 
     @Override
     protected ArrayList<Move> find_all_dec_1_mv() {
-        ArrayList<Move> mvs = null;
+        ArrayList<Move> mvs = new ArrayList<>();
         Move mv = find_dec_mv();
         if(mv != null){
-            mvs = new ArrayList<>();
             mvs.add(mv);
         }
         return mvs;
@@ -54,10 +53,9 @@ public class Variable extends Expression {
 
     @Override
     protected ArrayList<Move> find_all_inc_1_mv() {
-        ArrayList<Move> mvs = null;
+        ArrayList<Move> mvs = new ArrayList<>();
         Move mv = find_inc_mv();
         if(mv != null){
-            mvs = new ArrayList<>();
             mvs.add(mv);
         }
         return mvs;
@@ -73,7 +71,7 @@ public class Variable extends Expression {
             }
         }
 
-        return mvs.isEmpty() ? null : mvs;
+        return mvs;
     }
 
     @Override
