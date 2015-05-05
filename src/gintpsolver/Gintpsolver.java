@@ -28,7 +28,8 @@ public class Gintpsolver {
     private Move mv_just_made = null;
 
     private String problem_name;
-
+    private long iter_count = 0;
+    private double best_obj = Double.NaN;
     /**
      * Create a solver
      * @param pn the problem name
@@ -79,6 +80,13 @@ public class Gintpsolver {
     public void set_max_objective(Expression e) {
         obj = e;
         obj_type = 1;
+        best_obj = Double.NEGATIVE_INFINITY;
+    }
+
+    public void set_min_objective(Expression e){
+        obj = e;
+        obj_type = -1;
+        best_obj = Double.POSITIVE_INFINITY;
     }
 
     /**
@@ -227,6 +235,37 @@ public class Gintpsolver {
         return delta;
     }
 
+    private void make_all_move(ArrayList<Move> mvs){
+        for(Move mv : mvs){
+            make_move(mv);
+        }
+        iter_count++;
+
+        if(obj_type!= 0 && unsat_constraints.isEmpty()){
+            if(obj_type == 1 && obj.get_value() > best_obj
+                    || obj_type == -1 && obj.get_value() < best_obj){
+                best_obj = obj.get_value();
+            }
+        }
+
+        print_log_head();
+        print_log();
+    }
+
+
+    private void print_log_head(){
+        String str = "Iters\tBest\tObject\tUn-sat";
+        System.out.println(str);
+    }
+    private void print_log(){
+
+        String str;
+        str = unsat_constraints.isEmpty() ?
+                iter_count + "\t\t" + best_obj + "\t\t" + obj.get_value() + "\t\t" + unsat_constraints.size()
+                : iter_count +"\t\tNaN\t\tNaN\t\t" + unsat_constraints.size();
+        System.out.println(str);
+    }
+
     private void undo_move() {
         mv_just_made.var.value -= mv_just_made.delta;
         Delta delta = new Delta();
@@ -313,9 +352,7 @@ public class Gintpsolver {
         ArrayList<Move> mvs;
         mvs = find_improving_move();
 
-        for(Move mv : mvs){
-            make_move(mv);
-        }
+        make_all_move(mvs);
     }
 
     private void ease_constraint() {
@@ -323,9 +360,7 @@ public class Gintpsolver {
         while (!unsat_constraints.isEmpty()) {
             mvs = find_ease_c_move();
 
-            for(Move mv : mvs){
-                make_move(mv);
-            }
+            make_all_move(mvs);
         }
     }
 
