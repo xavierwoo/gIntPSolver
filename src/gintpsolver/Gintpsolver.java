@@ -186,6 +186,9 @@ public class Gintpsolver {
         for (Constraint c : constraints) {
             if (!c.is_satisfied()) unsat_constraints.add(c);
         }
+        if(obj_type == 0){
+            obj = gen_sum();
+        }
     }
 
     private Constraint get_random_un_sat_c() {
@@ -306,12 +309,12 @@ public class Gintpsolver {
 
         MovePack best_mvp = new MovePack();
         best_mvp.delta = new Delta();
-        int count = 1;
+        int count = 0;
         for(Move mv : mvs){
             MovePack mvp = eject_chain(mv, 1, 1);
 
             double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
-            if(cmp_v < 0){
+            if(cmp_v < 0 || count ==0){
                 best_mvp = mvp;
                 count = 1;
             }else if(cmp_v == 0 && rand.nextInt(++count) == 0){

@@ -65,9 +65,14 @@ public class Variable extends Expression {
     @Override
     protected ArrayList<Move> find_mv(double min_delta, double max_delta) {
         ArrayList<Move> mvs = new ArrayList<>();
-        for (int d = (int) min_delta; d <= (int) max_delta; d++) {
-            if (d != 0 && value + d >= min_value && value + d <= max_value) {
-                mvs.add(new Move(this, d));
+        int lb = Double.compare(min_delta, Double.NEGATIVE_INFINITY) == 0 ? min_value
+                : Math.max((int)min_delta + value, min_value);
+        int ub = Double.compare(max_delta, Double.POSITIVE_INFINITY) == 0 ? max_value
+                : Math.min((int)max_delta + value, max_value);
+
+        for (int new_value = lb; new_value <= ub; new_value++) {
+            if (new_value - value != 0 && new_value >= min_value && new_value <= max_value) {
+                mvs.add(new Move(this, new_value - value));
             }
         }
 

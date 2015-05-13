@@ -42,9 +42,7 @@ public class ConstraintNEQ extends Constraint {
             return new ArrayList<>();
         }
         ArrayList<Move> mvs = new ArrayList<>();
-
-        mvs.addAll(left_exp.find_all_dec_1_mv());
-        mvs.addAll(left_exp.find_all_inc_1_mv());
+        mvs.addAll(left_exp.find_mv(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
         return mvs;
     }
 

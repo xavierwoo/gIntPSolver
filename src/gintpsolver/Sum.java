@@ -136,7 +136,10 @@ public class Sum extends Expression {
             Expression e = entry.getKey();
             double para = entry.getValue();
             ArrayList<Move> sub_mvs;
-            sub_mvs = para > 0 ? e.find_mv(min_delta / para, max_delta / para) : e.find_mv(max_delta / para, min_delta / para);
+            sub_mvs = para > 0 ?
+                    e.find_mv(min_delta / para, max_delta / para)
+                    : e.find_mv(max_delta / para, min_delta / para);
+
             mvs.addAll(sub_mvs);
         }
         return mvs;
