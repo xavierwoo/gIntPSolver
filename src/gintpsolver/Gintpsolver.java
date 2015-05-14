@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -37,7 +36,9 @@ public class Gintpsolver {
     public Gintpsolver(String pn){
         problem_name = pn;
         File dir = new File(pn);
-        dir.mkdir();
+        if(!dir.mkdir()){
+            System.out.println("WARNING : The folder \"" + pn + "\" may already exist!");
+        }
     }
 
     private void write_solution() throws IOException {
@@ -257,16 +258,32 @@ public class Gintpsolver {
 
 
     private void print_log_head(){
-        String str = "Iters\tBest\tObject\tUn-sat";
-        System.out.println(str);
+//        String str = unsat_constraints.isEmpty() && obj_type != 0 ?
+//                "Iters\tBest\tObject" :
+//                "Iters\tUn-sat";
+//
+//
+//        System.out.println(str);
+
+        if(unsat_constraints.isEmpty() && obj_type != 0){
+            System.out.format("%10s%10s%10s\n", "Iters", "Best", "Objective");
+        }else{
+            System.out.format("%10s%10s\n", "Iters", "Un-sat");
+        }
     }
     private void print_log(){
 
-        String str;
-        str = unsat_constraints.isEmpty() ?
-                iter_count + "\t\t" + best_obj + "\t\t" + obj.get_value() + "\t\t" + unsat_constraints.size()
-                : iter_count +"\t\tNaN\t\tNaN\t\t" + unsat_constraints.size();
-        System.out.println(str);
+//        String str;
+//        str = unsat_constraints.isEmpty() && obj_type != 0 ?
+//                iter_count + "\t\t" + best_obj + "\t\t" + obj.get_value() + "\t\t"
+//                : iter_count +"\t\t" + unsat_constraints.size();
+//        System.out.println(str);
+
+        if(unsat_constraints.isEmpty() && obj_type != 0){
+            System.out.format("%10s%10s%10s\n", iter_count, best_obj, obj.get_value());
+        }else{
+            System.out.format("%10s%10s\n", iter_count, unsat_constraints.size());
+        }
     }
 
     private void undo_move() {
@@ -405,7 +422,11 @@ public class Gintpsolver {
         print_problem_summary();
         ease_constraint();
         write_solution();
-        improve_obj();
-        write_solution();
+        if(obj_type!=0) {
+            improve_obj();
+            write_solution();
+        }else{
+            System.out.println("Problem Solved!");
+        }
     }
 }
