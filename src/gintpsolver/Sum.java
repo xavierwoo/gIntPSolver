@@ -86,8 +86,7 @@ public class Sum extends Expression {
         for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
             Expression exp = entry.getKey();
             double para = entry.getValue();
-            ArrayList<Move> submvs;
-            submvs = para > 0 ? exp.find_all_dec_1_mv() : exp.find_all_inc_1_mv();
+            ArrayList<Move> submvs = para > 0 ? exp.find_all_dec_1_mv() : exp.find_all_inc_1_mv();
             mvs.addAll(submvs);
         }
         return mvs;
@@ -119,8 +118,7 @@ public class Sum extends Expression {
         for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
             Expression exp = entry.getKey();
             double para = entry.getValue();
-            ArrayList<Move> submvs;
-            submvs = para > 0 ? exp.find_all_inc_1_mv() : exp.find_all_dec_1_mv();
+            ArrayList<Move> submvs = para > 0 ? exp.find_all_inc_1_mv() : exp.find_all_dec_1_mv();
             mvs.addAll(submvs);
         }
         return mvs;
@@ -132,8 +130,7 @@ public class Sum extends Expression {
         for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
             Expression e = entry.getKey();
             double para = entry.getValue();
-            ArrayList<Move> sub_mvs;
-            sub_mvs = para > 0 ?
+            ArrayList<Move> sub_mvs = para > 0 ?
                     e.find_mv(min_delta / para, max_delta / para)
                     : e.find_mv(max_delta / para, min_delta / para);
 
