@@ -12,14 +12,29 @@ public class Variable extends Expression {
 
     protected String name;
     protected int value;
+
+    private int backup_value;
     private int min_value;
     private int max_value;
+
+    protected int getBackup_value(){
+        return backup_value;
+    }
 
     protected Variable(String n, int min, int max, Random r) {
         name = n;
         min_value = min;
         max_value = max;
         value = min_value + r.nextInt(max_value - min_value + 1);
+        backup_value = value;
+    }
+
+    protected void backup(){
+        backup_value = value;
+    }
+
+    protected void rollback(){
+        value = backup_value;
     }
 
     protected boolean is_boolean() {
@@ -91,6 +106,13 @@ public class Variable extends Expression {
         }
 
         return mvs;
+    }
+
+    @Override
+    protected ArrayList<Variable> get_all_variables() {
+        ArrayList<Variable> vars = new ArrayList<>();
+        vars.add(this);
+        return vars;
     }
 
     @Override

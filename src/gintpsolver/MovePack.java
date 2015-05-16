@@ -9,8 +9,9 @@ import java.util.ArrayList;
  */
 public class MovePack {
     protected ArrayList<Move> mvs = new ArrayList<>();
-    protected Delta delta;
+    protected Delta delta = new Delta();
 
+    static final MovePack NOTHING = new MovePack();
 
     /**
      * If move pack A is better, the return value will be positive.
@@ -21,7 +22,7 @@ public class MovePack {
      * @param  obj_type 1: maximize, -1: minimize
      * @return the return value
      */
-    static protected double compare(MovePack mpA, MovePack mpB, int obj_type){
+    static protected int compare(MovePack mpA, MovePack mpB, int obj_type){
        if(mpA.delta.delta_unsat_c < mpB.delta.delta_unsat_c){
            return 1;
        }else if(mpA.delta.delta_unsat_c > mpB.delta.delta_unsat_c){

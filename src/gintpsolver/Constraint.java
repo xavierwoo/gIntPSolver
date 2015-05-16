@@ -33,6 +33,11 @@ public abstract class Constraint {
         return penalty;
     }
 
+
+    protected ArrayList<Variable> get_all_variables(){
+        return left_exp.get_all_variables();
+    }
+
     protected boolean is_satisfied() {
         return get_penalty() == 0;
     }

@@ -2,9 +2,10 @@ package main;
 
 import gintpsolver.*;
 
-import java.io.IOException;
+import java.io.*;
 
 /**
+ * This file tells you how to use the solver
  * Created by xavierwoo on 2015/4/25.
  */
 public class Main {
@@ -90,9 +91,40 @@ public class Main {
         solver.solve();
     }
 
+
+    static public void solve_graph_coloring(String filename, int color_num) throws IOException {
+        Gintpsolver solver = new Gintpsolver("graph_coloring");
+
+        //read instance file
+        FileInputStream fstream = new FileInputStream(filename);
+        DataInputStream in = new DataInputStream(fstream);
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+        String strLine;
+        while((strLine = br.readLine()) != null){
+            String[] line = strLine.split(" ");
+            if(!line[0].equals("e")){
+                continue;
+            }
+            Variable a = solver.get_variable("v"+line[1]);
+            if(a==null){
+                a = solver.gen_variable("v"+line[1], 1, color_num);
+            }
+            Variable b = solver.get_variable("v" + line[2]);
+            if(b==null){
+                b = solver.gen_variable("v" + line[2], 1, color_num);
+            }
+            Sum edge_c = solver.gen_sum();
+            edge_c.add_element(a, 1);
+            edge_c.add_element(b, -1);
+            solver.subject_to_NEQ(edge_c, 0);
+        }
+        solver.solve();
+    }
+
     static public void main(String[] args) throws IOException {
 
-        graph_coloring_demo();
+        solve_graph_coloring("graph_coloring_instances/DSJC250.5.col", 28);
 
     }
 }

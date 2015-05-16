@@ -45,4 +45,7 @@ public abstract class Expression {
      * @return moves found
      */
     abstract protected ArrayList<Move> find_mv(double min_delta, double max_delta);
+
+
+    abstract protected  ArrayList<Variable> get_all_variables();
 }

@@ -140,6 +140,20 @@ public class Sum extends Expression {
     }
 
     @Override
+    protected ArrayList<Variable> get_all_variables() {
+        ArrayList<Variable> vars = new ArrayList<>();
+        for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
+            Expression e = entry.getKey();
+            if(e.getClass() == Variable.class){
+                vars.add((Variable)e);
+            }else{
+                vars.addAll(e.get_all_variables());
+            }
+        }
+        return vars;
+    }
+
+    @Override
     public String toString(){
         String str = "";
         for (Map.Entry<Expression, Double> entry : exp_elems.entrySet()){

@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * the general integer problem solver
@@ -15,13 +12,13 @@ import java.util.Random;
  */
 public class Gintpsolver {
 
-    private Random rand = new Random(2);
+    private Random rand = new Random();
 
     private ArrayList<Variable> vars = new ArrayList<>();
+    private HashMap<String, Variable> vars_map = new HashMap<>();
     private ArrayList<Constraint> constraints = new ArrayList<>();
     private ArrayList<Expression> non_var_exps = new ArrayList<>();
     private HashSet<Constraint> unsat_constraints = new HashSet<>();
-
     private int obj_type = 0;
     private Expression obj = null;
 
@@ -29,6 +26,12 @@ public class Gintpsolver {
     private String problem_name;
     private long iter_count = 0;
     private double best_obj = Double.NaN;
+    private int backup_unsat_c_num;
+
+    private long start_time;
+    private long last_time_point;
+
+    private int num_log_printed = 0;
     /**
      * Create a solver
      * @param pn the problem name
@@ -41,20 +44,43 @@ public class Gintpsolver {
         }
     }
 
+    private void backup(){
+        for(Variable v : vars){
+            v.backup();
+        }
+        backup_unsat_c_num = unsat_constraints.size();
+    }
+
+    private void rollback(){
+        for(Variable v : vars){
+            v.rollback();
+        }
+        for(Expression exp : non_var_exps){
+            exp.is_dirty = true;
+        }
+        unsat_constraints.clear();
+        for (Constraint c : constraints) {
+            c.is_dirty = true;
+            if (!c.is_satisfied()) unsat_constraints.add(c);
+        }
+    }
+
     private void write_solution() throws IOException {
         String solution_file = obj_type != 0 ?
-                problem_name + "/solution_" + obj.get_value() + ".txt"
-                : problem_name + "/solution" + ".txt";
+                problem_name + "/solution_" + obj.get_value() + ".csv"
+                : problem_name + "/solution" + ".csv";
         FileWriter outFile = new FileWriter(solution_file);
         PrintWriter printWriter = new PrintWriter(outFile);
 
         if(obj_type != 0){
-            printWriter.println("Objective:\t" + obj.get_value());
+            printWriter.println("Objective:," + obj.get_value());
             printWriter.println();
         }
 
+        printWriter.println();
+        printWriter.println("Variable,Value");
         for(Variable v : vars){
-            printWriter.println(v.name + "\t" + v.value);
+            printWriter.println(v.name + "," + v.value);
         }
 
         if(unsat_constraints.isEmpty()){
@@ -110,13 +136,19 @@ public class Gintpsolver {
      * @return the variable generated
      */
     public Variable gen_variable(String name, int min, int max) {
-        if (is_variable_exist(name)) {
+        if (vars_map.get(name)!=null) {
             throw new UnsupportedOperationException("Variable " + name + " already exists!");
         }
         Variable var = new Variable(name, min, max, rand);
         vars.add(var);
+        vars_map.put(name, var);
         return var;
     }
+
+    public Variable get_variable(String name){
+        return vars_map.get(name);
+    }
+
 
     /**
      * Generate a boolean decision variable
@@ -126,13 +158,6 @@ public class Gintpsolver {
      */
     public Variable gen_variable(String name) {
         return gen_variable(name, 0, 1);
-    }
-
-    private boolean is_variable_exist(String name) {
-        for (Variable v : vars) {
-            if (v.name.equals(name)) return true;
-        }
-        return false;
     }
 
     /**
@@ -187,6 +212,7 @@ public class Gintpsolver {
         for (Constraint c : constraints) {
             if (!c.is_satisfied()) unsat_constraints.add(c);
         }
+        backup_unsat_c_num = unsat_constraints.size();
         if(obj_type == 0){
             obj = gen_sum();
         }
@@ -251,8 +277,15 @@ public class Gintpsolver {
             }
         }
 
-        print_log_head();
-        print_log();
+        long curr_time = System.currentTimeMillis();
+        if(curr_time - last_time_point >= 5000){
+            last_time_point = curr_time;
+            if(num_log_printed > 20) {
+                print_log_head();
+            }
+            print_log();
+        }
+
     }
 
 
@@ -265,24 +298,20 @@ public class Gintpsolver {
 //        System.out.println(str);
 
         if(unsat_constraints.isEmpty() && obj_type != 0){
-            System.out.format("%10s%10s%10s\n", "Iters", "Best", "Objective");
+            System.out.format("%15s%15s%15s%15s\n", "Iters", "Best", "Objective", "Elapsed");
         }else{
-            System.out.format("%10s%10s\n", "Iters", "Un-sat");
+            System.out.format("%15s%15s%15s%15s\n", "Iters", "Un-sat", "Lest unsat", "Elapsed");
         }
+        num_log_printed = 0;
     }
     private void print_log(){
 
-//        String str;
-//        str = unsat_constraints.isEmpty() && obj_type != 0 ?
-//                iter_count + "\t\t" + best_obj + "\t\t" + obj.get_value() + "\t\t"
-//                : iter_count +"\t\t" + unsat_constraints.size();
-//        System.out.println(str);
-
         if(unsat_constraints.isEmpty() && obj_type != 0){
-            System.out.format("%10s%10s%10s\n", iter_count, best_obj, obj.get_value());
+            System.out.format("%15s%15s%15s%15s\n", iter_count, best_obj, obj.get_value(), (System.currentTimeMillis() - start_time)/1000);
         }else{
-            System.out.format("%10s%10s\n", iter_count, unsat_constraints.size());
+            System.out.format("%15s%15s%15s%15s\n", iter_count, unsat_constraints.size(), backup_unsat_c_num, (System.currentTimeMillis() - start_time)/1000);
         }
+        ++num_log_printed;
     }
 
     private void undo_move(Move mv) {
@@ -301,8 +330,10 @@ public class Gintpsolver {
         if(depth < max_depth && !unsat_constraints.isEmpty()) {
             Constraint unsat_c = get_random_un_sat_c();
             Move mv = unsat_c.find_ease_move_randomly(except_mvs);
-
-            mvp.merge(eject_chain(mv, depth+1, max_depth, except_mvs));
+            MovePack nmp = eject_chain(mv, depth + 1, max_depth, except_mvs);
+            if(MovePack.compare(nmp, MovePack.NOTHING, obj_type) > 0){
+                mvp.merge(nmp);
+            }
         }
         except_mvs.remove(except_mvs.size()-1);
 
@@ -312,31 +343,65 @@ public class Gintpsolver {
         return mvp;
     }
 
+    private ArrayList<Constraint> unsat_c_rand_order(){
+        ArrayList<Constraint> cs = new ArrayList<>(unsat_constraints);
+        Collections.shuffle(cs, rand);
+        return cs;
+    }
+
+    private int calc_perturb_strength(){
+        int similarity = calc_similarity();
+
+        //double perturb_percent = 0.9 * ((double)similarity/100) - 0.4;
+        double perturb_percent = 1.3 * ((double)similarity/100) - 0.6;
+        perturb_percent = Math.max(perturb_percent, 0.05);
+        return (int) ((double)vars.size() * perturb_percent);
+    }
+
+    private int calc_similarity(){
+        int same_var_num = 0;
+        for(Variable v : vars){
+            if(v.get_value() == v.getBackup_value()){
+                same_var_num++;
+            }
+        }
+        return same_var_num * 100 / vars.size();
+    }
 
     /**
      * Find moves that can comfort unsatisfied constraints
      * @return the moves
      */
-    private ArrayList<Move> find_ease_c_move() {
-        Constraint c_to_comfort = get_random_un_sat_c();
-        ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
+    private MovePack find_ease_c_move(int depth) {
 
-        MovePack best_mvp = new MovePack();
-        best_mvp.delta = new Delta();
+        MovePack best_mvp = null;
+
         int count = 0;
-        for(Move mv : mvs){
-            MovePack mvp = eject_chain(mv, 1, 2, new ArrayList<>());
+        ArrayList<Constraint> cs = unsat_c_rand_order();
+        for(Constraint c_to_comfort : cs) {
+            ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
+            for (Move mv : mvs) {
+                MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
 
-            double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
-            if(cmp_v < 0 || count ==0){
-                best_mvp = mvp;
-                count = 1;
-            }else if(cmp_v == 0 && rand.nextInt(++count) == 0){
-                best_mvp = mvp;
+                int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
+                if( cmp_value > 0){
+                    return mvp;
+                }
+                if(best_mvp == null){
+                    best_mvp = mvp;
+                    count = 1;
+                }else {
+                    int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
+                    if (cmp_v < 0 || count == 0) {
+                        best_mvp = mvp;
+                        count = 1;
+                    } else if (cmp_v == 0 && rand.nextInt(++count) == 0) {
+                        best_mvp = mvp;
+                    }
+                }
             }
         }
-
-        return best_mvp.mvs;
+        return best_mvp;
     }
 
     /**
@@ -352,7 +417,7 @@ public class Gintpsolver {
         for(Move mv : mvs){
             MovePack mvp = eject_chain(mv, 1, 1, new ArrayList<>());
 
-            double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
+            int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
             if(cmp_v < 0){
                 best_mvp = mvp;
                 count = 1;
@@ -371,11 +436,47 @@ public class Gintpsolver {
     }
 
     private void ease_constraint() {
+        int max_depth = Math.max(1, vars.size() / 50);
+        int depth = 1;
         while (!unsat_constraints.isEmpty()) {
-            ArrayList<Move> mvs = find_ease_c_move();
+            MovePack mvp = find_ease_c_move(depth);
 
-            make_all_move(mvs);
+            int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
+            if( cmp_value <= 0 && depth >= max_depth){
+                int perturb_strength = calc_perturb_strength();
+                //System.out.println("perturb strength : " +perturb_strength);
+                rollback();
+                perturbation(perturb_strength);
+                depth = 1;
+                continue;
+            }else if(cmp_value <=0){
+                ++depth;
+            }
+
+            make_all_move(mvp.mvs);
+            if(unsat_constraints.size() <= backup_unsat_c_num){
+                backup();
+            }
         }
+    }
+
+    private void perturbation(int strength){
+        ArrayList<Move> mvs = new ArrayList<>();
+        while(mvs.size() < strength){
+            Constraint c = get_random_un_sat_c();
+            ArrayList<Variable> vs = c.get_all_variables();
+            Variable v = vs.get(rand.nextInt(vs.size()));
+            Move mvi = v.find_inc_mv(null);
+            Move mvd = v.find_dec_mv(null);
+            if(mvi == null && mvd != null){
+                mvs.add(mvd);
+            }else if(mvi != null && mvd == null){
+                mvs.add(mvi);
+            }else if(mvi != null){
+                mvs.add(rand.nextInt(2)==0 ? mvi : mvd);
+            }
+        }
+        make_all_move(mvs);
     }
 
     private int count_boolean_vars() {
@@ -412,12 +513,15 @@ public class Gintpsolver {
      * Solve the problem
      */
     public void solve() throws IOException {
+        start_time = System.currentTimeMillis();
+        last_time_point = start_time;
         initialization();
         print_problem_summary();
+        print_log_head();
         ease_constraint();
         write_solution();
         if (obj_type == 0) {
-            System.out.println("Problem Solved!");
+            System.out.println("Problem Solved! Elapsed time : " + (System.currentTimeMillis() - start_time)/1000 + " seconds." );
         } else {
             improve_obj();
             write_solution();
