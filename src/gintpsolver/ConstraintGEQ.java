@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The constraint great equal than
@@ -27,11 +28,11 @@ public class ConstraintGEQ extends Constraint {
     }
 
     @Override
-    protected Move find_ease_move_randomly() {
+    protected Move find_ease_move_randomly(List<Move> except_mvs) {
         if (is_satisfied()) {
             return null;
         }
-        return left_exp.find_inc_mv();
+        return left_exp.find_inc_mv(except_mvs);
     }
 
     @Override

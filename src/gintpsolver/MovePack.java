@@ -37,4 +37,10 @@ public class MovePack {
            }
        }
     }
+
+    protected void merge(MovePack mp){
+        mvs.addAll(mp.mvs);
+        delta.delta_obj += mp.delta.delta_obj;
+        delta.delta_unsat_c += mp.delta.delta_unsat_c;
+    }
 }

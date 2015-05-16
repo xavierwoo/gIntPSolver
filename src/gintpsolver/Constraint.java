@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -36,7 +37,7 @@ public abstract class Constraint {
         return get_penalty() == 0;
     }
 
-    protected abstract Move find_ease_move_randomly() ;
+    protected abstract Move find_ease_move_randomly(List<Move> except_mvs) ;
 
     protected abstract ArrayList<Move> find_all_ease_moves() ;
 }

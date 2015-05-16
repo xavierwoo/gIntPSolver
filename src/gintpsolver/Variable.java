@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -31,14 +32,21 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected Move find_dec_mv() {
-        return value > min_value ? new Move(this, -1) : null;
+    protected Move find_dec_mv(List<Move> except_mvs) {
+
+        for(int d = -1 ; value + d >= min_value ; --d){
+            Move mv = new Move(this, d);
+            if(except_mvs == null || !except_mvs.contains(mv)){
+                return mv;
+            }
+        }
+        return null;
     }
 
     @Override
     protected ArrayList<Move> find_all_dec_1_mv() {
         ArrayList<Move> mvs = new ArrayList<>();
-        Move mv = find_dec_mv();
+        Move mv = find_dec_mv(null);
         if(mv != null){
             mvs.add(mv);
         }
@@ -47,14 +55,20 @@ public class Variable extends Expression {
 
 
     @Override
-    protected Move find_inc_mv() {
-        return value < max_value ? new Move(this, 1) : null;
+    protected Move find_inc_mv(List<Move> except_mvs) {
+        for( int d = 1; value + d <= max_value; ++d ){
+            Move mv = new Move(this, d);
+            if(except_mvs == null || !except_mvs.contains(mv)){
+                return  mv;
+            }
+        }
+        return null;
     }
 
     @Override
     protected ArrayList<Move> find_all_inc_1_mv() {
         ArrayList<Move> mvs = new ArrayList<>();
-        Move mv = find_inc_mv();
+        Move mv = find_inc_mv(null);
         if(mv != null){
             mvs.add(mv);
         }

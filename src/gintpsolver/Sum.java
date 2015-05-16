@@ -1,9 +1,6 @@
 package gintpsolver;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  * The sum expression
@@ -64,17 +61,17 @@ public class Sum extends Expression {
 
 
     @Override
-    protected Move find_dec_mv() {
+    protected Move find_dec_mv(List<Move> except_mvs) {
         Move mv = null;
         int count = 0;
         for (Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
             if(entry.getValue() > 0){
-                Move m = entry.getKey().find_dec_mv();
-                if (m != null && rand.nextInt(++count) == 0) {
+                Move m = entry.getKey().find_dec_mv(except_mvs);
+                if (m != null && except_mvs.contains(m) && rand.nextInt(++count) == 0) {
                     mv = m;
                 }
             }else{
-                Move m = entry.getKey().find_inc_mv();
+                Move m = entry.getKey().find_inc_mv(except_mvs);
                 if (m != null && rand.nextInt(++count) == 0) {
                     mv = m;
                 }
@@ -97,17 +94,17 @@ public class Sum extends Expression {
     }
 
     @Override
-    protected Move find_inc_mv() {
+    protected Move find_inc_mv(List<Move> except_mvs) {
         Move mv = null;
         int count = 0;
         for (Map.Entry<Expression, Double> entry :exp_elems.entrySet()){
             if(entry.getValue() > 0){
-                Move m = entry.getKey().find_inc_mv();
+                Move m = entry.getKey().find_inc_mv(except_mvs);
                 if(m!=null && rand.nextInt(++count) == 0){
                     mv = m;
                 }
             }else{
-                Move m = entry.getKey().find_dec_mv();
+                Move m = entry.getKey().find_dec_mv(except_mvs);
                 if(m!=null && rand.nextInt(++count) == 0){
                     mv = m;
                 }

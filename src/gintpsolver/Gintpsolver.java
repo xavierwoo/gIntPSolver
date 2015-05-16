@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -24,7 +25,6 @@ public class Gintpsolver {
     private int obj_type = 0;
     private Expression obj = null;
 
-    private Move mv_just_made = null;
 
     private String problem_name;
     private long iter_count = 0;
@@ -235,7 +235,6 @@ public class Gintpsolver {
         recursive_calc_exp(mv.var, delta);
         delta.delta_obj += obj.get_value();
 
-        mv_just_made = mv;
         return delta;
     }
 
@@ -286,30 +285,29 @@ public class Gintpsolver {
         }
     }
 
-    private void undo_move() {
-        mv_just_made.var.value -= mv_just_made.delta;
+    private void undo_move(Move mv) {
+        mv.var.value -= mv.delta;
         Delta delta = new Delta();
-        recursive_calc_exp(mv_just_made.var, delta);
-        mv_just_made = null;
+        recursive_calc_exp(mv.var, delta);
     }
 
-    private MovePack eject_chain(Move head_mv,int depth, int max_depth) {
+    private MovePack eject_chain(Move head_mv,int depth, int max_depth, ArrayList<Move> except_mvs) {
         MovePack mvp = new MovePack();
         mvp.mvs.add(head_mv);
 
         //make move
         mvp.delta = make_move(head_mv);
+        except_mvs.add(head_mv.reverse());
+        if(depth < max_depth && !unsat_constraints.isEmpty()) {
+            Constraint unsat_c = get_random_un_sat_c();
+            Move mv = unsat_c.find_ease_move_randomly(except_mvs);
 
-        if(depth < max_depth) {
-
-
-            //Add code to generate the ejection chain
-
-
+            mvp.merge(eject_chain(mv, depth+1, max_depth, except_mvs));
         }
+        except_mvs.remove(except_mvs.size()-1);
 
         //roll back move
-        undo_move();
+        undo_move(head_mv);
 
         return mvp;
     }
@@ -320,15 +318,14 @@ public class Gintpsolver {
      * @return the moves
      */
     private ArrayList<Move> find_ease_c_move() {
-        ArrayList<Move> mvs;
         Constraint c_to_comfort = get_random_un_sat_c();
-        mvs = c_to_comfort.find_all_ease_moves();
+        ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
 
         MovePack best_mvp = new MovePack();
         best_mvp.delta = new Delta();
         int count = 0;
         for(Move mv : mvs){
-            MovePack mvp = eject_chain(mv, 1, 1);
+            MovePack mvp = eject_chain(mv, 1, 2, new ArrayList<>());
 
             double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
             if(cmp_v < 0 || count ==0){
@@ -347,14 +344,13 @@ public class Gintpsolver {
      * @return the moves
      */
     private ArrayList<Move> find_improving_move(){
-        ArrayList<Move> mvs;
-        mvs = obj_type == 1 ? obj.find_all_inc_1_mv() : obj.find_all_dec_1_mv();
+        ArrayList<Move> mvs = obj_type == 1 ? obj.find_all_inc_1_mv() : obj.find_all_dec_1_mv();
 
         MovePack best_mvp = new MovePack();
         best_mvp.delta = new Delta();
         int count = 1;
         for(Move mv : mvs){
-            MovePack mvp = eject_chain(mv, 1, 1);
+            MovePack mvp = eject_chain(mv, 1, 1, new ArrayList<>());
 
             double cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
             if(cmp_v < 0){
@@ -369,16 +365,14 @@ public class Gintpsolver {
     }
 
     private void improve_obj(){
-        ArrayList<Move> mvs;
-        mvs = find_improving_move();
+        ArrayList<Move> mvs = find_improving_move();
 
         make_all_move(mvs);
     }
 
     private void ease_constraint() {
-        ArrayList<Move> mvs;
         while (!unsat_constraints.isEmpty()) {
-            mvs = find_ease_c_move();
+            ArrayList<Move> mvs = find_ease_c_move();
 
             make_all_move(mvs);
         }
@@ -422,11 +416,11 @@ public class Gintpsolver {
         print_problem_summary();
         ease_constraint();
         write_solution();
-        if(obj_type!=0) {
+        if (obj_type == 0) {
+            System.out.println("Problem Solved!");
+        } else {
             improve_obj();
             write_solution();
-        }else{
-            System.out.println("Problem Solved!");
         }
     }
 }

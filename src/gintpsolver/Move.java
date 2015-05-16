@@ -12,4 +12,24 @@ public class Move {
         var = v;
         delta = d;
     }
+
+    protected Move reverse(){
+        return new Move(var, 0-delta);
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o==null || o.getClass()!=this.getClass()){
+            return false;
+        }
+        Move mv_o = (Move) o;
+        return var==mv_o.var && delta == mv_o.delta;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = var.hashCode();
+        result = 31 * result + delta;
+        return result;
+    }
 }

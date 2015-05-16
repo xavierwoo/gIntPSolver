@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The constraint equal
@@ -27,12 +28,12 @@ public class ConstraintEQ extends Constraint{
     }
 
     @Override
-    protected Move find_ease_move_randomly() {
+    protected Move find_ease_move_randomly(List<Move> except_mvs) {
         if (is_satisfied()) {
             return null;
         }
         return Double.compare(left_exp.get_value(), c) > 0 ?
-                left_exp.find_dec_mv() : left_exp.find_inc_mv();
+                left_exp.find_dec_mv(except_mvs) : left_exp.find_inc_mv(except_mvs);
     }
 
     @Override

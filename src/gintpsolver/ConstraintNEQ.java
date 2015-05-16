@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -29,11 +30,21 @@ public class ConstraintNEQ extends Constraint {
     }
 
     @Override
-    protected Move find_ease_move_randomly() {
+    protected Move find_ease_move_randomly(List<Move> except_mvs) {
         if (is_satisfied()) {
             return null;
         }
-        return rand.nextInt(2) == 0 ? left_exp.find_dec_mv() : left_exp.find_inc_mv();
+        //return rand.nextInt(2) == 0 ? left_exp.find_dec_mv() : left_exp.find_inc_mv();
+
+        Move mvd = left_exp.find_dec_mv(except_mvs);
+        Move mvi = left_exp.find_inc_mv(except_mvs);
+        if(mvd == null && mvi != null){
+            return mvi;
+        }else if(mvd != null && mvi == null){
+            return mvd;
+        }else{
+            return rand.nextInt(2) == 0 ? mvd : mvi;
+        }
     }
 
     @Override
