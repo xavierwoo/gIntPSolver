@@ -494,7 +494,7 @@ public class Gintpsolver {
         } else if (obj_type == -1) {
             str += "\tA Minimize Problem\n";
         } else {
-            str += "\tA Constraint Satisfaction problem\n";
+            str += "\tA Constraints Satisfaction Problem\n";
         }
 
         int num_b = count_boolean_vars();
@@ -505,6 +505,8 @@ public class Gintpsolver {
             str += "\tInteger Variables : " + (vars.size() - num_b);
         }
         str += "\n\tExpression Nodes : " + non_var_exps.size();
+
+        str += "\n\tConstraints : " + constraints.size();
         str += "\n******************************\n";
         System.out.println(str);
     }
