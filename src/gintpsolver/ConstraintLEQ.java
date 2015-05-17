@@ -28,11 +28,11 @@ public class ConstraintLEQ extends Constraint {
     }
 
     @Override
-    protected Move find_ease_move_randomly(List<Move> except_mvs) {
+    protected Move find_ease_move_randomly(List<Move> except_mvs, int iter) {
         if (is_satisfied()) {
             return null;
         }
-        return left_exp.find_dec_mv(except_mvs);
+        return left_exp.find_dec_mv(except_mvs, iter);
     }
 
     @Override

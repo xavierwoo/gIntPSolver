@@ -1,8 +1,6 @@
 package gintpsolver;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * The decision variable, can only take integer values
@@ -16,6 +14,8 @@ public class Variable extends Expression {
     private int backup_value;
     private int min_value;
     private int max_value;
+
+    HashMap<Integer, Integer> tabu_table = new HashMap<>();
 
     protected int getBackup_value(){
         return backup_value;
@@ -47,9 +47,14 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected Move find_dec_mv(List<Move> except_mvs) {
+    protected Move find_dec_mv(List<Move> except_mvs, int iter) {
 
         for(int d = -1 ; value + d >= min_value ; --d){
+            Integer tt = tabu_table.get(value+d);
+            if(tt != null && tt > iter){
+                continue;
+            }
+
             Move mv = new Move(this, d);
             if(except_mvs == null || !except_mvs.contains(mv)){
                 return mv;
@@ -61,7 +66,7 @@ public class Variable extends Expression {
     @Override
     protected ArrayList<Move> find_all_dec_1_mv() {
         ArrayList<Move> mvs = new ArrayList<>();
-        Move mv = find_dec_mv(null);
+        Move mv = find_dec_mv(null, 0);
         if(mv != null){
             mvs.add(mv);
         }
@@ -70,8 +75,12 @@ public class Variable extends Expression {
 
 
     @Override
-    protected Move find_inc_mv(List<Move> except_mvs) {
+    protected Move find_inc_mv(List<Move> except_mvs, int iter) {
         for( int d = 1; value + d <= max_value; ++d ){
+            Integer tt = tabu_table.get(value+d);
+            if(tt!=null && tt > iter){
+                continue;
+            }
             Move mv = new Move(this, d);
             if(except_mvs == null || !except_mvs.contains(mv)){
                 return  mv;
@@ -83,7 +92,7 @@ public class Variable extends Expression {
     @Override
     protected ArrayList<Move> find_all_inc_1_mv() {
         ArrayList<Move> mvs = new ArrayList<>();
-        Move mv = find_inc_mv(null);
+        Move mv = find_inc_mv(null, 0);
         if(mv != null){
             mvs.add(mv);
         }
@@ -118,5 +127,12 @@ public class Variable extends Expression {
     @Override
     public String toString() {
         return name;
+    }
+
+    public void check(){
+        if(value < min_value || value > max_value){
+            throw new UnknownError("variable " + name
+                    +" error! value:" + value + " bound:[" + min_value + "," +max_value+"]");
+        }
     }
 }

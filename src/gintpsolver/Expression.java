@@ -18,7 +18,7 @@ public abstract class Expression {
     /**
      * @return A random move that can decrease the expression value
      */
-    abstract protected Move find_dec_mv(List<Move> except_mvs);
+    abstract protected Move find_dec_mv(List<Move> except_mvs, int iter);
 
     /**
      * Find moves that decrease the value
@@ -29,7 +29,7 @@ public abstract class Expression {
     /**
      * @return A random move that can increase the expression value
      */
-    abstract protected Move find_inc_mv(List<Move> except_mvs);
+    abstract protected Move find_inc_mv(List<Move> except_mvs, int iter);
 
     /**
      * Find moves that increase the value

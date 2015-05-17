@@ -42,7 +42,7 @@ public abstract class Constraint {
         return get_penalty() == 0;
     }
 
-    protected abstract Move find_ease_move_randomly(List<Move> except_mvs) ;
+    protected abstract Move find_ease_move_randomly(List<Move> except_mvs, int iter) ;
 
     protected abstract ArrayList<Move> find_all_ease_moves() ;
 }

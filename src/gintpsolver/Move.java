@@ -32,4 +32,14 @@ public class Move {
         result = 31 * result + delta;
         return result;
     }
+
+    @Override
+    public String toString(){
+        return var.toString() + " " + delta;
+    }
+
+    public boolean is_tabu(int iter){
+        Integer tt = var.tabu_table.get(var.value + delta);
+        return ! (tt==null || tt <iter);
+    }
 }

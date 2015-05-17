@@ -30,14 +30,14 @@ public class ConstraintNEQ extends Constraint {
     }
 
     @Override
-    protected Move find_ease_move_randomly(List<Move> except_mvs) {
+    protected Move find_ease_move_randomly(List<Move> except_mvs, int iter) {
         if (is_satisfied()) {
             return null;
         }
         //return rand.nextInt(2) == 0 ? left_exp.find_dec_mv() : left_exp.find_inc_mv();
 
-        Move mvd = left_exp.find_dec_mv(except_mvs);
-        Move mvi = left_exp.find_inc_mv(except_mvs);
+        Move mvd = left_exp.find_dec_mv(except_mvs, iter);
+        Move mvi = left_exp.find_inc_mv(except_mvs, iter);
         if(mvd == null && mvi != null){
             return mvi;
         }else if(mvd != null && mvi == null){

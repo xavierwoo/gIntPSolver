@@ -24,7 +24,7 @@ public class Gintpsolver {
 
 
     private String problem_name;
-    private long iter_count = 0;
+    private int iter_count = 0;
     private double best_obj = Double.NaN;
     private int backup_unsat_c_num;
 
@@ -66,6 +66,7 @@ public class Gintpsolver {
     }
 
     private void write_solution() throws IOException {
+        check_variable_feasibility();
         String solution_file = obj_type != 0 ?
                 problem_name + "/solution_" + obj.get_value() + ".csv"
                 : problem_name + "/solution" + ".csv";
@@ -77,7 +78,6 @@ public class Gintpsolver {
             printWriter.println();
         }
 
-        printWriter.println();
         printWriter.println("Variable,Value");
         for(Variable v : vars){
             printWriter.println(v.name + "," + v.value);
@@ -145,7 +145,7 @@ public class Gintpsolver {
         return var;
     }
 
-    public Variable get_variable(String name){
+    public Variable get_variable(String name) {
         return vars_map.get(name);
     }
 
@@ -252,10 +252,14 @@ public class Gintpsolver {
      * @param mv move
      * @return the change value that the move caused
      */
-    private Delta make_move(Move mv) {
+    private Delta make_move(Move mv, int base_tabu_tenure, int max_tabu_delta) {
+
+        //set tabu table
+        if(base_tabu_tenure > 0) {
+            mv.var.tabu_table.put(mv.var.value, iter_count + base_tabu_tenure + rand.nextInt(max_tabu_delta));
+        }
 
         Delta delta = new Delta();
-
         delta.delta_obj = 0-obj.get_value();
         mv.var.value += mv.delta;
         recursive_calc_exp(mv.var, delta);
@@ -264,9 +268,9 @@ public class Gintpsolver {
         return delta;
     }
 
-    private void make_all_move(ArrayList<Move> mvs){
+    private void make_all_move(ArrayList<Move> mvs, int base_tabu_tenure, int max_tabu_delta){
         for(Move mv : mvs){
-            make_move(mv);
+            make_move(mv, base_tabu_tenure, max_tabu_delta);
         }
         iter_count++;
 
@@ -325,11 +329,11 @@ public class Gintpsolver {
         mvp.mvs.add(head_mv);
 
         //make move
-        mvp.delta = make_move(head_mv);
+        mvp.delta = make_move(head_mv, 0, 0);
         except_mvs.add(head_mv.reverse());
         if(depth < max_depth && !unsat_constraints.isEmpty()) {
             Constraint unsat_c = get_random_un_sat_c();
-            Move mv = unsat_c.find_ease_move_randomly(except_mvs);
+            Move mv = unsat_c.find_ease_move_randomly(except_mvs, iter_count);
             MovePack nmp = eject_chain(mv, depth + 1, max_depth, except_mvs);
             if(MovePack.compare(nmp, MovePack.NOTHING, obj_type) > 0){
                 mvp.merge(nmp);
@@ -352,8 +356,9 @@ public class Gintpsolver {
     private int calc_perturb_strength(){
         int similarity = calc_similarity();
 
-        //double perturb_percent = 0.9 * ((double)similarity/100) - 0.4;
-        double perturb_percent = 1.3 * ((double)similarity/100) - 0.6;
+        //double perturb_percent = 0.5 * ((double)similarity/100) - 0.2;
+        double perturb_percent = 0.9 * ((double)similarity/100) - 0.4;
+        //double perturb_percent = 1.3 * ((double)similarity/100) - 0.6;
         perturb_percent = Math.max(perturb_percent, 0.05);
         return (int) ((double)vars.size() * perturb_percent);
     }
@@ -374,29 +379,36 @@ public class Gintpsolver {
      */
     private MovePack find_ease_c_move(int depth) {
 
-        MovePack best_mvp = null;
-
         int count = 0;
         ArrayList<Constraint> cs = unsat_c_rand_order();
+        Collections.shuffle(cs);
+        MovePack best_mvp = null;
         for(Constraint c_to_comfort : cs) {
             ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
             for (Move mv : mvs) {
-                MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
+                if (mv.is_tabu(iter_count)) {
+                    MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
+                    if(mvp.delta.delta_unsat_c + unsat_constraints.size() < backup_unsat_c_num){
+                        return mvp;
+                    }
+                } else {
+                    MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
 
-                int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
-                if( cmp_value > 0){
-                    return mvp;
-                }
-                if(best_mvp == null){
-                    best_mvp = mvp;
-                    count = 1;
-                }else {
-                    int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
-                    if (cmp_v < 0 || count == 0) {
+                    int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
+                    if (cmp_value > 0) {
+                        return mvp;
+                    }
+                    if (best_mvp == null) {
                         best_mvp = mvp;
                         count = 1;
-                    } else if (cmp_v == 0 && rand.nextInt(++count) == 0) {
-                        best_mvp = mvp;
+                    } else {
+                        int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
+                        if (cmp_v < 0 || count == 0) {
+                            best_mvp = mvp;
+                            count = 1;
+                        } else if (cmp_v == 0 && rand.nextInt(++count) == 0) {
+                            best_mvp = mvp;
+                        }
                     }
                 }
             }
@@ -429,54 +441,104 @@ public class Gintpsolver {
         return best_mvp.mvs;
     }
 
-    private void improve_obj(){
-        ArrayList<Move> mvs = find_improving_move();
-
-        make_all_move(mvs);
-    }
+//    private void improve_obj(){
+//        //ArrayList<Move> mvs = find_improving_move();
+//
+//        //make_all_move(mvs);
+//    }
 
     private void ease_constraint() {
-        int max_depth = Math.max(1, vars.size() / 50);
+        int max_depth =1;// Math.max(1, vars.size() / 100);
         int depth = 1;
+        int same_count = 1;
+        boolean is_vally = false;
+        int clime_count = 0;
+        int max_clime = vars.size();
+        int base_tabu_tenure = vars.size()/50;
+        int max_tabu_tenure_delta = 30;
         while (!unsat_constraints.isEmpty()) {
             MovePack mvp = find_ease_c_move(depth);
 
             int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
-            if( cmp_value <= 0 && depth >= max_depth){
-                int perturb_strength = calc_perturb_strength();
-                //System.out.println("perturb strength : " +perturb_strength);
-                rollback();
-                perturbation(perturb_strength);
-                depth = 1;
-                continue;
-            }else if(cmp_value <=0){
-                ++depth;
+
+            if(cmp_value <= 0){
+                is_vally = true;
+                if(depth <= max_depth){
+                    ++depth;
+                }
+            }else{
+                depth = 0;
+            }
+            if(is_vally){
+                ++clime_count;
+                if(clime_count > max_clime){
+                    int perturb_strength = calc_perturb_strength();
+                    System.out.println("perturb strength : " +perturb_strength);
+                    rollback();
+                    perturbation(perturb_strength);
+                    depth = 1;
+                    is_vally = false;
+                    clime_count = 0;
+                    continue;
+                }
             }
 
-            make_all_move(mvp.mvs);
-            if(unsat_constraints.size() <= backup_unsat_c_num){
+//            if( cmp_value <= 0 && depth >= max_depth){
+//                int perturb_strength = calc_perturb_strength();
+//                //System.out.println("perturb strength : " +perturb_strength);
+//                rollback();
+//                perturbation(perturb_strength);
+//                depth = 1;
+//                continue;
+//            }else if(cmp_value <=0){
+//                ++depth;
+//            }
+
+            make_all_move(mvp.mvs, base_tabu_tenure, max_tabu_tenure_delta);
+
+
+            if(unsat_constraints.size() < backup_unsat_c_num){
                 backup();
+                same_count = 1;
+                clime_count = 0;
+                is_vally = false;
+            }else if(unsat_constraints.size() == backup_unsat_c_num){
+                same_count++;
+                if(rand.nextInt(same_count)==0){
+                    backup();
+                }
             }
         }
     }
 
     private void perturbation(int strength){
-        ArrayList<Move> mvs = new ArrayList<>();
-        while(mvs.size() < strength){
+
+        //ArrayList<Move> mvs = new ArrayList<>();
+        for(int str = 0; str < strength;){
             Constraint c = get_random_un_sat_c();
             ArrayList<Variable> vs = c.get_all_variables();
             Variable v = vs.get(rand.nextInt(vs.size()));
-            Move mvi = v.find_inc_mv(null);
-            Move mvd = v.find_dec_mv(null);
+            Move mvi = v.find_inc_mv(null, 0);
+            Move mvd = v.find_dec_mv(null, 0);
             if(mvi == null && mvd != null){
-                mvs.add(mvd);
+                make_move(mvd, 1, 5);
+                ++str;
+                //mvs.add(mvd);
             }else if(mvi != null && mvd == null){
-                mvs.add(mvi);
+                make_move(mvi, 1, 5);
+                ++str;
+                //mvs.add(mvi);
             }else if(mvi != null){
-                mvs.add(rand.nextInt(2)==0 ? mvi : mvd);
+                if(rand.nextInt(2)==0){
+                    make_move(mvi, 1, 5);
+                }else{
+                    make_move(mvd, 1, 5);
+                }
+                ++str;
+                //mvs.add(rand.nextInt(2)==0 ? mvi : mvd);
             }
         }
-        make_all_move(mvs);
+        //make_all_move(mvs);
     }
 
     private int count_boolean_vars() {
@@ -511,6 +573,12 @@ public class Gintpsolver {
         System.out.println(str);
     }
 
+    private void check_variable_feasibility(){
+        for(Variable v : vars){
+            v.check();
+        }
+    }
+
     /**
      * Solve the problem
      */
@@ -524,9 +592,6 @@ public class Gintpsolver {
         write_solution();
         if (obj_type == 0) {
             System.out.println("Problem Solved! Elapsed time : " + (System.currentTimeMillis() - start_time)/1000 + " seconds." );
-        } else {
-            improve_obj();
-            write_solution();
         }
     }
 }
