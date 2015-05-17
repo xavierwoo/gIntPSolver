@@ -373,35 +373,41 @@ public class Gintpsolver {
         return same_var_num * 100 / vars.size();
     }
 
-    /**
-     * Find moves that can comfort unsatisfied constraints
-     * @return the moves
-     */
     private MovePack find_ease_c_move(int depth) {
 
         int count = 0;
+        int tabu_count = 0;
         ArrayList<Constraint> cs = unsat_c_rand_order();
-        Collections.shuffle(cs);
+        //Collections.shuffle(cs);
         MovePack best_mvp = null;
+        MovePack best_tabu_mvp = null;
         for(Constraint c_to_comfort : cs) {
             ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
             for (Move mv : mvs) {
+                MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
                 if (mv.is_tabu(iter_count)) {
-                    MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
-                    if(mvp.delta.delta_unsat_c + unsat_constraints.size() < backup_unsat_c_num){
-                        return mvp;
+                    if(best_tabu_mvp == null){
+                        best_tabu_mvp = mvp;
+                        tabu_count = 1;
+                    }else{
+                        int cmp_v = MovePack.compare(best_tabu_mvp, mvp, obj_type);
+                        if(cmp_v < 0){
+                            best_tabu_mvp = mvp;
+                            tabu_count = 1;
+                        }else if(cmp_v == 0 && rand.nextInt(++tabu_count)==0){
+                            best_tabu_mvp = mvp;
+                        }
                     }
                 } else {
-                    MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
-
-                    int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
-                    if (cmp_value > 0) {
-                        return mvp;
-                    }
                     if (best_mvp == null) {
                         best_mvp = mvp;
                         count = 1;
                     } else {
+                        if(cs.size() > 50){
+                            if(mvp.delta.delta_unsat_c < 0){
+                                return mvp;
+                            }
+                        }
                         int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
                         if (cmp_v < 0 || count == 0) {
                             best_mvp = mvp;
@@ -413,7 +419,18 @@ public class Gintpsolver {
                 }
             }
         }
-        return best_mvp;
+        if(best_mvp == null && best_tabu_mvp != null){
+            return best_tabu_mvp;
+        }else if(best_mvp != null && best_tabu_mvp != null){
+            if(MovePack.compare(best_mvp, best_tabu_mvp, obj_type) < 0
+                    && best_tabu_mvp.delta.delta_unsat_c + unsat_constraints.size() < backup_unsat_c_num){
+                return best_tabu_mvp;
+            }else{
+                return best_mvp;
+            }
+        }else{
+            return best_mvp;
+        }
     }
 
     /**
@@ -448,7 +465,7 @@ public class Gintpsolver {
 //    }
 
     private void ease_constraint() {
-        int max_depth =1;// Math.max(1, vars.size() / 100);
+        int max_depth = Math.max(1, vars.size() / 100);
         int depth = 1;
         int same_count = 1;
         boolean is_vally = false;
@@ -463,7 +480,7 @@ public class Gintpsolver {
 
             if(cmp_value <= 0){
                 is_vally = true;
-                if(depth <= max_depth){
+                if(unsat_constraints.size() < 20 && depth <= max_depth){
                     ++depth;
                 }
             }else{
@@ -513,8 +530,7 @@ public class Gintpsolver {
 
     private void perturbation(int strength){
 
-        //ArrayList<Move> mvs = new ArrayList<>();
-        for(int str = 0; str < strength;){
+        for (int str = 0; str < strength; ++str) {
             Constraint c = get_random_un_sat_c();
             ArrayList<Variable> vs = c.get_all_variables();
             Variable v = vs.get(rand.nextInt(vs.size()));
@@ -522,20 +538,14 @@ public class Gintpsolver {
             Move mvd = v.find_dec_mv(null, 0);
             if(mvi == null && mvd != null){
                 make_move(mvd, 1, 5);
-                ++str;
-                //mvs.add(mvd);
             }else if(mvi != null && mvd == null){
                 make_move(mvi, 1, 5);
-                ++str;
-                //mvs.add(mvi);
             }else if(mvi != null){
                 if(rand.nextInt(2)==0){
                     make_move(mvi, 1, 5);
                 }else{
                     make_move(mvd, 1, 5);
                 }
-                ++str;
-                //mvs.add(rand.nextInt(2)==0 ? mvi : mvd);
             }
         }
         //make_all_move(mvs);
