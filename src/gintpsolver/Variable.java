@@ -42,7 +42,7 @@ public class Variable extends Expression {
     }
 
     @Override
-    protected double get_value() {
+    public double get_value() {
         return (double) value;
     }
 
@@ -122,6 +122,11 @@ public class Variable extends Expression {
         ArrayList<Variable> vars = new ArrayList<>();
         vars.add(this);
         return vars;
+    }
+
+    @Override
+    protected double get_delta(Expression exp, double delta) {
+        throw new UnsupportedOperationException("Not supported for variables!");
     }
 
     @Override

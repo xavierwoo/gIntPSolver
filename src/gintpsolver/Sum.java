@@ -7,11 +7,8 @@ import java.util.*;
  * Created by xavierwoo on 2015/4/25.
  */
 public class Sum extends Expression {
-
-    private double value = 0;
-
-
     protected HashMap<Expression, Double> exp_elems = new HashMap<>();
+    private double value = 0;
 
     protected double c = 0;
 
@@ -52,7 +49,7 @@ public class Sum extends Expression {
     }
 
     @Override
-    protected double get_value() {
+    public double get_value() {
         if(is_dirty){
             calc_value();
         }
@@ -151,6 +148,12 @@ public class Sum extends Expression {
             }
         }
         return vars;
+    }
+
+    @Override
+    protected double get_delta(Expression exp, double delta) {
+        double para = exp_elems.get(exp);
+        return para * delta;
     }
 
     @Override

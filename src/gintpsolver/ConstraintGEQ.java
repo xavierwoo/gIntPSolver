@@ -44,6 +44,11 @@ public class ConstraintGEQ extends Constraint {
     }
 
     @Override
+    protected int get_delta(double d) {
+        return 0;
+    }
+
+    @Override
     public String toString(){
         return left_exp.toString() + " >= " + c;
     }

@@ -1,6 +1,7 @@
 package gintpsolver;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -13,7 +14,8 @@ public abstract class Expression {
     protected ArrayList<Expression> in_exp = new ArrayList<>();
     protected Constraint in_constraint = null;
 
-    abstract protected double get_value();
+    abstract public double get_value();
+
 
     /**
      * @return A random move that can decrease the expression value
@@ -48,4 +50,6 @@ public abstract class Expression {
 
 
     abstract protected  ArrayList<Variable> get_all_variables();
+
+    abstract  protected double get_delta(Expression exp, double delta);
 }

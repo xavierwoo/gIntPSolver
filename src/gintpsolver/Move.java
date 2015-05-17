@@ -7,6 +7,7 @@ package gintpsolver;
 public class Move {
     Variable var;
     int delta;
+    Delta c_o_delta;
 
     protected Move(Variable v, int d){
         var = v;
@@ -26,12 +27,6 @@ public class Move {
         return var==mv_o.var && delta == mv_o.delta;
     }
 
-    @Override
-    public int hashCode() {
-        int result = var.hashCode();
-        result = 31 * result + delta;
-        return result;
-    }
 
     @Override
     public String toString(){
@@ -41,5 +36,25 @@ public class Move {
     public boolean is_tabu(int iter){
         Integer tt = var.tabu_table.get(var.value + delta);
         return ! (tt==null || tt <iter);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = var != null ? var.hashCode() : 0;
+        result = 31 * result + delta;
+        result = 31 * result + (c_o_delta != null ? c_o_delta.hashCode() : 0);
+        return result;
+    }
+
+    public boolean is_improving(int obj_type){
+        if(obj_type == 0){
+            if(c_o_delta.delta_unsat_c < 0){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            throw new UnsupportedOperationException("write later!");
+        }
     }
 }

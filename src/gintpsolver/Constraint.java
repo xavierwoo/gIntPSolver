@@ -45,4 +45,11 @@ public abstract class Constraint {
     protected abstract Move find_ease_move_randomly(List<Move> except_mvs, int iter) ;
 
     protected abstract ArrayList<Move> find_all_ease_moves() ;
+
+    /**
+     * if the left expression changed value by d, how is the constraint?
+     * @param d the change value of left expression
+     * @return 1 if constraint changed to bu unsatisfied, -1 if changed to satisfied, 0 otherwise
+     */
+    protected abstract int get_delta(double d);
 }
