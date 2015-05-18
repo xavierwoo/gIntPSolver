@@ -492,7 +492,15 @@ public class Gintpsolver {
                     continue;
                 }
             }
+
+            int unsat_before = unsat_constraints.size();
+
             make_move(mv, base_tabu_tenure, max_tabu_tenure_delta);
+
+            if(unsat_before + mv.c_o_delta.delta_unsat_c != unsat_constraints.size()){
+                throw new UnknownError("Evaluating error at iteration :" + iter_count);
+            }
+
             int is_better = is_better_solution();
             if (is_better > 0) {
                 backup();
