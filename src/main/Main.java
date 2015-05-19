@@ -101,7 +101,7 @@ public class Main {
         FileInputStream fstream = new FileInputStream(filename);
         DataInputStream in = new DataInputStream(fstream);
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
-        int[][] net = new int[251][251];
+        int[][] net = new int[501][501];
         for (int i = 0; i < net.length; i++) {
             for (int j = 0; j < net[i].length; j++) {
                 net[i][j] = 0;
@@ -144,7 +144,7 @@ public class Main {
 
     static public void main(String[] args) throws IOException {
 
-        solve_graph_coloring("graph_coloring_instances/DSJC250.5.col", 29);
+        solve_graph_coloring("graph_coloring_instances/DSJC250.5.col", 28);
         //graph_coloring_demo();
     }
 }

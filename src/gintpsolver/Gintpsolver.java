@@ -463,11 +463,11 @@ public class Gintpsolver {
     }
 
     private void local_search(long end_time) {
-        final int base_tabu_tenure = vars.size() / 20;
-        final int max_tabu_tenure_delta = 30;
+        final int base_tabu_tenure = vars.size() / 10;
+        final int max_tabu_tenure_delta = vars.size() / 5;
         int same_count = 1;
         int wander_count = 0;
-        final int max_wander_count = vars.size()*2;
+        final int max_wander_count = vars.size()*15;
         boolean is_vally = false;
         while (System.currentTimeMillis() - start_time < end_time) {
             ++iter_count;
@@ -479,14 +479,16 @@ public class Gintpsolver {
             if (!mv.is_improving(obj_type)) {
                 is_vally = true;
             }
+
             if (is_vally) {
                 ++wander_count;
                 if (wander_count > max_wander_count) {
 //                    int perturb_strength = calc_perturb_strength();
-                    System.out.println("perturbing... " );
+                    //System.out.println("Similarity : " + calc_similarity() +"%");
                     rollback();
-                    perturbation(unsat_constraints.size()/3);
-                    print_log();
+                    perturbation(unsat_constraints.size() / 3);
+                    //System.out.println("perturbing... " );
+                    //print_log();
                     is_vally = false;
                     wander_count = 0;
                     continue;
@@ -538,6 +540,7 @@ public class Gintpsolver {
             } else {
                 if (unsat_constraints.size() + t_d.delta_unsat_c < backup_unsat_c_num
                         && t_d.delta_unsat_c < d.delta_unsat_c) {
+                    //System.out.println("Aspiration");
                     return t_mv;
                 } else {
                     return mv;
