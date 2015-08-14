@@ -29,33 +29,7 @@ public class ConstraintNEQ extends Constraint {
         is_dirty = false;
     }
 
-    @Override
-    protected Move find_ease_move_randomly(List<Move> except_mvs, int iter) {
-        if (is_satisfied()) {
-            return null;
-        }
-        //return rand.nextInt(2) == 0 ? left_exp.find_dec_mv() : left_exp.find_inc_mv();
 
-        Move mvd = left_exp.find_dec_mv(except_mvs, iter);
-        Move mvi = left_exp.find_inc_mv(except_mvs, iter);
-        if(mvd == null && mvi != null){
-            return mvi;
-        }else if(mvd != null && mvi == null){
-            return mvd;
-        }else{
-            return rand.nextInt(2) == 0 ? mvd : mvi;
-        }
-    }
-
-    @Override
-    protected ArrayList<Move> find_all_ease_moves() {
-        if (is_satisfied()) {
-            return new ArrayList<>();
-        }
-        ArrayList<Move> mvs = new ArrayList<>();
-        mvs.addAll(left_exp.find_mv(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
-        return mvs;
-    }
 
     @Override
     protected int get_delta(double d) {

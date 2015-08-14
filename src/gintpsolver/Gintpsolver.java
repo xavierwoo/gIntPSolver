@@ -19,19 +19,17 @@ public class Gintpsolver {
     private ArrayList<Constraint> constraints = new ArrayList<>();
     private ArrayList<Expression> non_var_exps = new ArrayList<>();
     private HashSet<Constraint> unsat_constraints = new HashSet<>();
-    private int obj_type = 0;
-    private Expression obj = null;
 
 
     private String problem_name;
     private int iter_count = 0;
-    private double backup_obj_value;
     private int backup_unsat_c_num;
 
     private long start_time;
     private long last_time_point;
 
     private int num_log_printed = 0;
+
 
     /**
      * Create a solver
@@ -51,7 +49,6 @@ public class Gintpsolver {
             v.backup();
         }
         backup_unsat_c_num = unsat_constraints.size();
-        backup_obj_value = obj.get_value();
     }
 
     private void rollback() {
@@ -69,17 +66,10 @@ public class Gintpsolver {
     }
 
     private void write_solution() throws IOException {
-        check_variable_feasibility();
-        String solution_file = obj_type != 0 ?
-                problem_name + "/solution_" + obj.get_value() + ".csv"
-                : problem_name + "/solution" + ".csv";
+        String solution_file =problem_name + "/solution" + ".csv";
         FileWriter outFile = new FileWriter(solution_file);
         PrintWriter printWriter = new PrintWriter(outFile);
 
-        if (obj_type != 0) {
-            printWriter.println("Objective:," + obj.get_value());
-            printWriter.println();
-        }
 
         printWriter.println("Variable,Value");
         for (Variable v : vars) {
@@ -100,23 +90,6 @@ public class Gintpsolver {
             printWriter.println(c);
         }
         outFile.close();
-    }
-
-    /**
-     * Set the objective to be maximization
-     *
-     * @param e the objective function
-     */
-    public void set_max_objective(Expression e) {
-        obj = e;
-        obj_type = 1;
-        backup_obj_value = Double.NEGATIVE_INFINITY;
-    }
-
-    public void set_min_objective(Expression e) {
-        obj = e;
-        obj_type = -1;
-        backup_obj_value = Double.POSITIVE_INFINITY;
     }
 
     /**
@@ -154,55 +127,6 @@ public class Gintpsolver {
 
 
     /**
-     * Generate a boolean decision variable
-     *
-     * @param name name of the variable
-     * @return the variable generated
-     */
-    public Variable gen_variable(String name) {
-        return gen_variable(name, 0, 1);
-    }
-
-    /**
-     * Create a constraint that lp is greater than c
-     *
-     * @param lp the expression
-     * @param c  the constant
-     * @return the constraint created
-     */
-    public Constraint subject_to_GEQ(Expression lp, double c) {
-        Constraint constraint = new ConstraintGEQ(lp, c);
-        constraints.add(constraint);
-        return constraint;
-    }
-
-    /**
-     * Create a constraint that lp is equal to c
-     *
-     * @param lp the expression
-     * @param c  the constant
-     * @return the constraint created
-     */
-    public Constraint subject_to_EQ(Expression lp, double c) {
-        Constraint constraint = new ConstraintEQ(lp, c);
-        constraints.add(constraint);
-        return constraint;
-    }
-
-    /**
-     * Create a constraint that lp is less than c
-     *
-     * @param lp the expression
-     * @param c  the constant
-     * @return the constraint created
-     */
-    public Constraint subject_to_LEQ(Expression lp, double c) {
-        Constraint constraint = new ConstraintLEQ(lp, c);
-        constraints.add(constraint);
-        return constraint;
-    }
-
-    /**
      * Create a constraint that lp is not equal to c
      *
      * @param lp the expression
@@ -220,300 +144,24 @@ public class Gintpsolver {
             if (!c.is_satisfied()) unsat_constraints.add(c);
         }
         backup_unsat_c_num = unsat_constraints.size();
-        if (obj_type == 0) {
-            obj = gen_sum();
-        }
-    }
-
-    private Constraint get_random_un_sat_c() {
-        int index = rand.nextInt(unsat_constraints.size());
-        int i = 0;
-        for (Constraint c : unsat_constraints) {
-            if (i == index) {
-                return c;
-            }
-            i++;
-        }
-        throw new UnsupportedOperationException("get_random_un_sat_c() error!");
-    }
-
-    private void recursive_calc_exp(Expression exp, Delta delta) {
-        exp.is_dirty = true;
-        if (exp.in_constraint != null) {
-            exp.in_constraint.is_dirty = true;
-            if (exp.in_constraint.is_satisfied() && unsat_constraints.contains(exp.in_constraint)) {
-                unsat_constraints.remove(exp.in_constraint);
-                delta.delta_unsat_c--;
-            } else if (!exp.in_constraint.is_satisfied() && !unsat_constraints.contains(exp.in_constraint)) {
-                unsat_constraints.add(exp.in_constraint);
-                delta.delta_unsat_c++;
-            }
-        }
-        for (Expression e : exp.in_exp) {
-            recursive_calc_exp(e, delta);
-        }
-    }
-
-    /**
-     * implement a move and return the delta value
-     *
-     * @param mv move
-     * @return the change value that the move caused
-     */
-    private Delta make_move(Move mv, int base_tabu_tenure, int max_tabu_delta) {
-
-        //set tabu table
-        if (base_tabu_tenure > 0) {
-            mv.var.tabu_table.put(mv.var.value, iter_count + base_tabu_tenure + rand.nextInt(max_tabu_delta));
-        }
-
-        Delta delta = new Delta();
-        delta.delta_obj = 0 - obj.get_value();
-        mv.var.value += mv.delta;
-        recursive_calc_exp(mv.var, delta);
-        delta.delta_obj += obj.get_value();
-
-        long curr_time = System.currentTimeMillis();
-        if (curr_time - last_time_point >= 5000) {
-            last_time_point = curr_time;
-            if (num_log_printed > 20) {
-                print_log_head();
-            }
-            print_log();
-        }
-
-        return delta;
-    }
-
-    private void make_all_move(ArrayList<Move> mvs, int base_tabu_tenure, int max_tabu_delta) {
-        for (Move mv : mvs) {
-            make_move(mv, base_tabu_tenure, max_tabu_delta);
-        }
-        iter_count++;
-
-        if (obj_type != 0 && unsat_constraints.isEmpty()) {
-            if (obj_type == 1 && obj.get_value() > backup_obj_value
-                    || obj_type == -1 && obj.get_value() < backup_obj_value) {
-                backup_obj_value = obj.get_value();
-            }
-        }
-
-        long curr_time = System.currentTimeMillis();
-        if (curr_time - last_time_point >= 5000) {
-            last_time_point = curr_time;
-            if (num_log_printed > 20) {
-                print_log_head();
-            }
-            print_log();
-        }
-
     }
 
 
     private void print_log_head() {
-//        String str = unsat_constraints.isEmpty() && obj_type != 0 ?
-//                "Iters\tBest\tObject" :
-//                "Iters\tUn-sat";
-//
-//
-//        System.out.println(str);
 
-        if (unsat_constraints.isEmpty() && obj_type != 0) {
-            System.out.format("%15s%15s%15s%15s\n", "Iters", "Best", "Objective", "Elapsed");
-        } else {
-            System.out.format("%15s%15s%15s%15s\n", "Iters", "Un-sat", "Lest unsat", "Elapsed");
-        }
+        System.out.format("%15s%15s%15s%15s\n", "Iters", "Un-sat", "Lest unsat", "Elapsed");
+
         num_log_printed = 0;
     }
 
     private void print_log() {
 
-        if (unsat_constraints.isEmpty() && obj_type != 0) {
-            System.out.format("%15s%15s%15s%15s\n", iter_count, backup_obj_value, obj.get_value(), (System.currentTimeMillis() - start_time) / 1000);
-        } else {
-            System.out.format("%15s%15s%15s%15s\n", iter_count, unsat_constraints.size(), backup_unsat_c_num, (System.currentTimeMillis() - start_time) / 1000);
-        }
+
+        System.out.format("%15s%15s%15s%15s\n", iter_count, unsat_constraints.size(), backup_unsat_c_num, (System.currentTimeMillis() - start_time) / 1000);
+
         ++num_log_printed;
     }
 
-    private void undo_move(Move mv) {
-        mv.var.value -= mv.delta;
-        Delta delta = new Delta();
-        recursive_calc_exp(mv.var, delta);
-    }
-
-    private MovePack eject_chain(Move head_mv, int depth, int max_depth, ArrayList<Move> except_mvs) {
-        MovePack mvp = new MovePack();
-        mvp.mvs.add(head_mv);
-
-        //make move
-        mvp.delta = make_move(head_mv, 0, 0);
-        except_mvs.add(head_mv.reverse());
-        if (depth < max_depth && !unsat_constraints.isEmpty()) {
-            Constraint unsat_c = get_random_un_sat_c();
-            Move mv = unsat_c.find_ease_move_randomly(except_mvs, iter_count);
-            MovePack nmp = eject_chain(mv, depth + 1, max_depth, except_mvs);
-            if (MovePack.compare(nmp, MovePack.NOTHING, obj_type) > 0) {
-                mvp.merge(nmp);
-            }
-        }
-        except_mvs.remove(except_mvs.size() - 1);
-
-        //roll back move
-        undo_move(head_mv);
-
-        return mvp;
-    }
-
-    private ArrayList<Constraint> unsat_c_rand_order() {
-        ArrayList<Constraint> cs = new ArrayList<>(unsat_constraints);
-        Collections.shuffle(cs, rand);
-        return cs;
-    }
-
-    private int calc_perturb_strength() {
-        int similarity = calc_similarity();
-
-        //double perturb_percent = 0.5 * ((double)similarity/100) - 0.2;
-        double perturb_percent = 0.9 * ((double) similarity / 100) - 0.4;
-        //double perturb_percent = 1.3 * ((double)similarity/100) - 0.6;
-        perturb_percent = Math.max(perturb_percent, 0.05);
-        return (int) ((double) vars.size() * perturb_percent);
-    }
-
-    private int calc_similarity() {
-        int same_var_num = 0;
-        for (Variable v : vars) {
-            if (v.get_value() == v.getBackup_value()) {
-                same_var_num++;
-            }
-        }
-        return same_var_num * 100 / vars.size();
-    }
-
-    private HashSet<Move> candidate_mvs = new HashSet<>();
-
-    private Move find_move() {
-        //Get all candidate mvs;
-        candidate_mvs.clear();
-        for (Constraint c : unsat_constraints) {
-            candidate_mvs.addAll(c.find_all_ease_moves());
-        }
-
-        Move best_mv = null;
-        Delta best_delta = null;
-        int best_count = 1;
-        Move best_tabu_mv = null;
-        Delta best_tabu_delta = null;
-        int best_tabu_count = 1;
-        for (Move mv : candidate_mvs) {
-            Delta delta = evaluate(mv.var, (double) mv.delta);
-            mv.c_o_delta = delta;
-            if (mv.is_tabu(iter_count)) {
-                if (best_tabu_mv == null) {
-                    best_tabu_mv = mv;
-                    best_tabu_delta = delta;
-                    continue;
-                }
-                int cmpv = Delta.compare(delta, best_tabu_delta, obj_type);
-                if (cmpv > 0) {
-                    best_tabu_mv = mv;
-                    best_tabu_delta = delta;
-                    best_tabu_count = 1;
-                } else if (cmpv == 0 && rand.nextInt(++best_tabu_count) == 0) {
-                    best_tabu_mv = mv;
-                }
-            } else {
-//                if(unsat_constraints.size()>100 && mv.is_improving(obj_type)){
-//                    return mv;
-//                }
-                if (best_mv == null) {
-                    best_mv = mv;
-                    best_delta = delta;
-                    continue;
-                }
-                int cmpv = Delta.compare(delta, best_delta, obj_type);
-                if (cmpv > 0) {
-                    best_mv = mv;
-                    best_delta = delta;
-                    best_count = 1;
-                } else if (cmpv == 0 && rand.nextInt(++best_count) == 0) {
-                    best_mv = mv;
-                }
-            }
-        }
-
-        return decide_tabu_and_non_tabu_move(best_tabu_mv, best_tabu_delta, best_mv, best_delta);
-    }
-
-    private Delta evaluate(Expression exp, double d) {
-        Delta De = new Delta();
-        if (exp == obj) {
-            throw new UnsupportedOperationException("Not supported yet!");
-        } else {
-            for (Expression e : exp.in_exp) {
-                double delta = e.get_delta(exp, d);
-                De.merge(evaluate(e, delta));
-            }
-        }
-        if (exp.in_constraint != null) {
-            De.delta_unsat_c += exp.in_constraint.get_delta(d);
-        }
-        return De;
-    }
-
-    private void local_search(long end_time) {
-        final int base_tabu_tenure = vars.size() / 10;
-        final int max_tabu_tenure_delta = vars.size() / 5;
-        int same_count = 1;
-        int wander_count = 0;
-        final int max_wander_count = vars.size()*15;
-        boolean is_vally = false;
-        while (System.currentTimeMillis() - start_time < end_time) {
-            ++iter_count;
-            if(obj_type==0 && unsat_constraints.isEmpty()){
-                break;
-            }
-
-            Move mv = find_move();
-            if (!mv.is_improving(obj_type)) {
-                is_vally = true;
-            }
-
-            if (is_vally) {
-                ++wander_count;
-                if (wander_count > max_wander_count) {
-//                    int perturb_strength = calc_perturb_strength();
-                    //System.out.println("Similarity : " + calc_similarity() +"%");
-                    rollback();
-                    perturbation(unsat_constraints.size() / 3);
-                    //System.out.println("perturbing... " );
-                    //print_log();
-                    is_vally = false;
-                    wander_count = 0;
-                    continue;
-                }
-            }
-
-            int unsat_before = unsat_constraints.size();
-
-            make_move(mv, base_tabu_tenure, max_tabu_tenure_delta);
-
-            if(unsat_before + mv.c_o_delta.delta_unsat_c != unsat_constraints.size()){
-                throw new UnknownError("Evaluating error at iteration :" + iter_count);
-            }
-
-            int is_better = is_better_solution();
-            if (is_better > 0) {
-                backup();
-                same_count = 1;
-                wander_count = 0;
-                is_vally = false;
-            } else if (is_better == 0 && rand.nextInt(++same_count) == 0) {
-                backup();
-            }
-        }
-    }
 
     private int is_better_solution() {
         if (unsat_constraints.size() > backup_unsat_c_num) {
@@ -521,232 +169,24 @@ public class Gintpsolver {
         } else if (unsat_constraints.size() < backup_unsat_c_num) {
             return 1;
         } else {
-            if (obj_type == 0) {
-                return 0;
-            } else {
-                throw new UnsupportedOperationException("Not written!");
-            }
+            return 0;
         }
     }
 
-    private Move decide_tabu_and_non_tabu_move(Move t_mv, Delta t_d, Move mv, Delta d) {
-        if (mv == null) {
-            return t_mv;
-        } else if (t_mv == null) {
-            return mv;
-        } else {
-            if (unsat_constraints.isEmpty()) {
-                throw new UnsupportedOperationException("I will write this later");
-            } else {
-                if (unsat_constraints.size() + t_d.delta_unsat_c < backup_unsat_c_num
-                        && t_d.delta_unsat_c < d.delta_unsat_c) {
-                    //System.out.println("Aspiration");
-                    return t_mv;
-                } else {
-                    return mv;
-                }
-            }
-        }
-    }
-
-    private MovePack find_ease_c_move(int depth) {
-
-        int count = 0;
-        int tabu_count = 0;
-        ArrayList<Constraint> cs = unsat_c_rand_order();
-        //Collections.shuffle(cs);
-        MovePack best_mvp = null;
-        MovePack best_tabu_mvp = null;
-        for (Constraint c_to_comfort : cs) {
-            ArrayList<Move> mvs = c_to_comfort.find_all_ease_moves();
-            for (Move mv : mvs) {
-                MovePack mvp = eject_chain(mv, 1, depth, new ArrayList<>());
-                if (mv.is_tabu(iter_count)) {
-                    if (best_tabu_mvp == null) {
-                        best_tabu_mvp = mvp;
-                        tabu_count = 1;
-                    } else {
-                        int cmp_v = MovePack.compare(best_tabu_mvp, mvp, obj_type);
-                        if (cmp_v < 0) {
-                            best_tabu_mvp = mvp;
-                            tabu_count = 1;
-                        } else if (cmp_v == 0 && rand.nextInt(++tabu_count) == 0) {
-                            best_tabu_mvp = mvp;
-                        }
-                    }
-                } else {
-                    if (best_mvp == null) {
-                        best_mvp = mvp;
-                        count = 1;
-                    } else {
-                        if (cs.size() > 50) {
-                            if (mvp.delta.delta_unsat_c < 0) {
-                                return mvp;
-                            }
-                        }
-                        int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
-                        if (cmp_v < 0 || count == 0) {
-                            best_mvp = mvp;
-                            count = 1;
-                        } else if (cmp_v == 0 && rand.nextInt(++count) == 0) {
-                            best_mvp = mvp;
-                        }
-                    }
-                }
-            }
-        }
-        if (best_mvp == null && best_tabu_mvp != null) {
-            return best_tabu_mvp;
-        } else if (best_mvp != null && best_tabu_mvp != null) {
-            if (MovePack.compare(best_mvp, best_tabu_mvp, obj_type) < 0
-                    && best_tabu_mvp.delta.delta_unsat_c + unsat_constraints.size() < backup_unsat_c_num) {
-                return best_tabu_mvp;
-            } else {
-                return best_mvp;
-            }
-        } else {
-            return best_mvp;
-        }
-    }
-
-    /**
-     * Find moves that can improve the objective value
-     *
-     * @return the moves
-     */
-    private ArrayList<Move> find_improving_move() {
-        ArrayList<Move> mvs = obj_type == 1 ? obj.find_all_inc_1_mv() : obj.find_all_dec_1_mv();
-
-        MovePack best_mvp = new MovePack();
-        best_mvp.delta = new Delta();
-        int count = 1;
-        for (Move mv : mvs) {
-            MovePack mvp = eject_chain(mv, 1, 1, new ArrayList<>());
-
-            int cmp_v = MovePack.compare(best_mvp, mvp, obj_type);
-            if (cmp_v < 0) {
-                best_mvp = mvp;
-                count = 1;
-            } else if (cmp_v == 0 && rand.nextInt(++count) == 0) {
-                best_mvp = mvp;
-            }
-        }
-
-        return best_mvp.mvs;
-    }
-
-    private void ease_constraint() {
-        int max_depth = Math.max(1, vars.size() / 100);
-        int depth = 1;
-        int same_count = 1;
-        boolean is_vally = false;
-        int clime_count = 0;
-        int max_clime = vars.size();
-        int base_tabu_tenure = vars.size() / 50;
-        int max_tabu_tenure_delta = 30;
-        while (!unsat_constraints.isEmpty()) {
-            MovePack mvp = find_ease_c_move(depth);
-
-            int cmp_value = MovePack.compare(mvp, MovePack.NOTHING, obj_type);
-
-            if (cmp_value <= 0) {
-                is_vally = true;
-                if (unsat_constraints.size() < 20 && depth <= max_depth) {
-                    ++depth;
-                }
-            } else {
-                depth = 0;
-            }
-            if (is_vally) {
-                ++clime_count;
-                if (clime_count > max_clime) {
-                    int perturb_strength = calc_perturb_strength();
-                    System.out.println("perturb strength : " + perturb_strength);
-                    rollback();
-                    perturbation(perturb_strength);
-                    depth = 1;
-                    is_vally = false;
-                    clime_count = 0;
-                    continue;
-                }
-            }
-
-            make_all_move(mvp.mvs, base_tabu_tenure, max_tabu_tenure_delta);
-
-
-            if (unsat_constraints.size() < backup_unsat_c_num) {
-                backup();
-                same_count = 1;
-                clime_count = 0;
-                is_vally = false;
-            } else if (unsat_constraints.size() == backup_unsat_c_num) {
-                same_count++;
-                if (rand.nextInt(same_count) == 0) {
-                    backup();
-                }
-            }
-        }
-    }
-
-    private void perturbation(int strength) {
-
-        for (int str = 0; str < strength; ++str) {
-            Constraint c = get_random_un_sat_c();
-            ArrayList<Variable> vs = c.get_all_variables();
-            Variable v = vs.get(rand.nextInt(vs.size()));
-            Move mvi = v.find_inc_mv(null, 0);
-            Move mvd = v.find_dec_mv(null, 0);
-            if (mvi == null && mvd != null) {
-                make_move(mvd, 1, 5);
-            } else if (mvi != null && mvd == null) {
-                make_move(mvi, 1, 5);
-            } else if (mvi != null) {
-                if (rand.nextInt(2) == 0) {
-                    make_move(mvi, 1, 5);
-                } else {
-                    make_move(mvd, 1, 5);
-                }
-            }
-        }
-        //make_all_move(mvs);
-    }
-
-    private int count_boolean_vars() {
-        int num_b = 0;
-        for (Variable v : vars) {
-            if (v.is_boolean()) num_b++;
-        }
-        return num_b;
-    }
 
     private void print_problem_summary() {
-        String str = "******************************\nProblem Overview:\n";
-        if (obj_type == 1) {
-            str += "\tA Maximize Problem\n";
-        } else if (obj_type == -1) {
-            str += "\tA Minimize Problem\n";
-        } else {
-            str += "\tA Constraints Satisfaction Problem\n";
-        }
-
-        int num_b = count_boolean_vars();
-        if (num_b > 0) {
-            str += "\tBoolean Variables : " + num_b;
-        }
-        if (num_b != vars.size()) {
-            str += "\tInteger Variables : " + (vars.size() - num_b);
-        }
-        str += "\n\tExpression Nodes : " + non_var_exps.size();
-
-        str += "\n\tConstraints : " + constraints.size();
-        str += "\n******************************\n";
+        String str = "******************************\nProblem Overview:\n"
+            + "\tA Constraints Satisfaction Problem\n"
+            + "\tInteger Variables : " + vars.size()
+            + "\n\tExpression Nodes : " + non_var_exps.size()
+            + "\n\tConstraints : " + constraints.size()
+            + "\n******************************\n";
         System.out.println(str);
     }
 
-    private void check_variable_feasibility() {
-        for (Variable v : vars) {
-            v.check();
-        }
+
+    private void local_search_ease_constraint(){
+
     }
 
     /**
@@ -760,10 +200,7 @@ public class Gintpsolver {
         print_log_head();
         print_log();
         //ease_constraint();
-        local_search(time*1000);
+
         write_solution();
-        if (obj_type == 0) {
-            System.out.println("Problem Solved! Elapsed time : " + (System.currentTimeMillis() - start_time) / 1000 + " seconds.");
-        }
     }
 }

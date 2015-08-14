@@ -6,17 +6,15 @@ package gintpsolver;
  */
 public class Move {
     Variable var;
-    int delta;
-    Delta c_o_delta;
+    int delta_value;
+    int delta_unsat_c = 0;
 
     protected Move(Variable v, int d){
         var = v;
-        delta = d;
+        delta_value = d;
     }
 
-    protected Move reverse(){
-        return new Move(var, 0-delta);
-    }
+
 
     @Override
     public boolean equals(Object o){
@@ -24,37 +22,36 @@ public class Move {
             return false;
         }
         Move mv_o = (Move) o;
-        return var==mv_o.var && delta == mv_o.delta;
+        return var==mv_o.var && delta_value == mv_o.delta_value;
     }
 
 
     @Override
     public String toString(){
-        return var.toString() + " " + delta;
+        return var.toString() + " " + delta_value;
     }
 
     public boolean is_tabu(int iter){
-        Integer tt = var.tabu_table.get(var.value + delta);
+        Integer tt = var.tabu_table.get(var.value + delta_value);
         return ! (tt==null || tt <iter);
+    }
+
+
+
+    public boolean is_improving() {
+
+        if (delta_unsat_c < 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        int result = var != null ? var.hashCode() : 0;
-        result = 31 * result + delta;
-        result = 31 * result + (c_o_delta != null ? c_o_delta.hashCode() : 0);
+        int result = var.hashCode();
+        result = 31 * result + delta_value;
+        result = 31 * result + delta_unsat_c;
         return result;
-    }
-
-    public boolean is_improving(int obj_type){
-        if(obj_type == 0){
-            if(c_o_delta.delta_unsat_c < 0){
-                return true;
-            }else{
-                return false;
-            }
-        }else{
-            throw new UnsupportedOperationException("write later!");
-        }
     }
 }

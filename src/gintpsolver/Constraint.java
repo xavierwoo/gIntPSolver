@@ -34,17 +34,9 @@ public abstract class Constraint {
     }
 
 
-    protected ArrayList<Variable> get_all_variables(){
-        return left_exp.get_all_variables();
-    }
-
     protected boolean is_satisfied() {
         return get_penalty() == 0;
     }
-
-    protected abstract Move find_ease_move_randomly(List<Move> except_mvs, int iter) ;
-
-    protected abstract ArrayList<Move> find_all_ease_moves() ;
 
     /**
      * if the left expression changed value by d, how is the constraint?
