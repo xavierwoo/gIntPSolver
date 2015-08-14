@@ -98,7 +98,7 @@ public class Gintpsolver {
      * @return the expression generated
      */
     public Sum gen_sum() {
-        Sum sum = new Sum(rand);
+        Sum sum = new Sum(this);
         non_var_exps.add(sum);
         return sum;
     }
@@ -115,7 +115,7 @@ public class Gintpsolver {
         if (vars_map.get(name) != null) {
             throw new UnsupportedOperationException("Variable " + name + " already exists!");
         }
-        Variable var = new Variable(name, min, max, rand);
+        Variable var = new Variable(this, name, min, max, rand);
         vars.add(var);
         vars_map.put(name, var);
         return var;
@@ -184,9 +184,21 @@ public class Gintpsolver {
         System.out.println(str);
     }
 
+    private void evaluate_move(Move mv){
+        mv.delta_unsat_c = 0;
+        //write later....
+    }
+
+    private Move find_move(){
+        Move best_mv = null;
+
+        for(Constraint uc: unsat_constraints){
+//write later....
+        }
+    }
 
     private void local_search_ease_constraint(){
-
+        Move mv = find_move();
     }
 
     /**
@@ -199,7 +211,8 @@ public class Gintpsolver {
         print_problem_summary();
         print_log_head();
         print_log();
-        //ease_constraint();
+
+        local_search_ease_constraint();
 
         write_solution();
     }

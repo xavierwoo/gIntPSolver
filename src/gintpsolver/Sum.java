@@ -12,10 +12,10 @@ public class Sum extends Expression {
 
     protected double c = 0;
 
-    protected Random rand;
+    //protected Random rand;
 
-    protected Sum(Random r) {
-        rand = r;
+    protected Sum(Gintpsolver s) {
+        super(s);
     }
 
     /**

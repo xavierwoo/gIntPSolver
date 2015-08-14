@@ -21,7 +21,8 @@ public class Variable extends Expression {
         return backup_value;
     }
 
-    protected Variable(String n, int min, int max, Random r) {
+    protected Variable(Gintpsolver s, String n, int min, int max, Random r) {
+        super(s);
         name = n;
         min_value = min;
         max_value = max;

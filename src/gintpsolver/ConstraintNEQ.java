@@ -29,7 +29,10 @@ public class ConstraintNEQ extends Constraint {
         is_dirty = false;
     }
 
-
+    @Override
+    protected Move find_move() {
+//write later....
+    }
 
     @Override
     protected int get_delta(double d) {

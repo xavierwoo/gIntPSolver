@@ -7,7 +7,7 @@ package gintpsolver;
 public class Move {
     Variable var;
     int delta_value;
-    int delta_unsat_c = 0;
+    int delta_unsat_c;
 
     protected Move(Variable v, int d){
         var = v;

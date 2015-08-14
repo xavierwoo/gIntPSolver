@@ -26,6 +26,8 @@ public abstract class Constraint {
 
     protected abstract void calc_penalty();
 
+    protected  abstract Move find_move();
+
     protected double get_penalty() {
         if (is_dirty) {
             calc_penalty();
