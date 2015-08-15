@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class Gintpsolver {
 
-    private Random rand = new Random(0);
+    protected Random rand = new Random(0);
 
     private ArrayList<Variable> vars = new ArrayList<>();
     private HashMap<String, Variable> vars_map = new HashMap<>();
@@ -134,7 +134,7 @@ public class Gintpsolver {
      * @return the constraint created
      */
     public Constraint subject_to_NEQ(Expression lp, double c) {
-        Constraint constraint = new ConstraintNEQ(lp, c, rand);
+        Constraint constraint = new ConstraintNEQ(this,lp, c);
         constraints.add(constraint);
         return constraint;
     }
@@ -184,7 +184,7 @@ public class Gintpsolver {
         System.out.println(str);
     }
 
-    private void evaluate_move(Move mv){
+    protected void evaluate_move(Move mv){
         mv.delta_unsat_c = 0;
         //write later....
     }

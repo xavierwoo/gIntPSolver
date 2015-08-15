@@ -15,6 +15,7 @@ public abstract class Expression {
     protected Constraint in_constraint = null;
 
     abstract public double get_value();
+    abstract protected Move find_move(int delta_dir);
 
     public Expression(Gintpsolver s){
         solver = s;

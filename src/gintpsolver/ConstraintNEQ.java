@@ -9,11 +9,11 @@ import java.util.Random;
  * Created by xavierwoo on 2015/5/4.
  */
 public class ConstraintNEQ extends Constraint {
-    Random rand;
-    protected ConstraintNEQ(Expression le, double constant, Random r) {
-        super(le, constant);
-        rand = r;
+
+    protected ConstraintNEQ(Gintpsolver s, Expression le, double constant) {
+        super(s, le, constant);
     }
+
 
     @Override
     protected void calc_penalty() {
@@ -31,7 +31,16 @@ public class ConstraintNEQ extends Constraint {
 
     @Override
     protected Move find_move() {
-//write later....
+        Move mv_i = left_exp.find_move(1);
+        Move mv_d = left_exp.find_move(-1);
+        int cmp = Move.CompareMove(mv_i, mv_d);
+        if(cmp > 0){
+            return mv_i;
+        }else if(cmp < 0){
+            return mv_d;
+        }else{
+            return solver.rand.nextBoolean() ? mv_i : mv_d;
+        }
     }
 
     @Override

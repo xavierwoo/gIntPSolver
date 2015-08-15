@@ -10,14 +10,16 @@ import java.util.Random;
  */
 public abstract class Constraint {
 
+    protected Gintpsolver solver;
+
     protected Expression left_exp;
     protected double c;
 
-    //private Random rand;
     protected double penalty;
     protected boolean is_dirty = true;
 
-    protected Constraint(Expression le, double constant) {
+    protected Constraint(Gintpsolver s, Expression le, double constant) {
+        solver = s;
         left_exp = le;
         left_exp.in_constraint = this;
         c = constant;

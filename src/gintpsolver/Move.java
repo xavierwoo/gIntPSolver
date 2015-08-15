@@ -54,4 +54,20 @@ public class Move {
         result = 31 * result + delta_unsat_c;
         return result;
     }
+
+    protected static int CompareMove(Move mv1, Move mv2){
+        if( mv1==null && mv2 == null){
+            return 0;
+        }else if(mv1 == null) {
+            return -1;
+        }else if(mv2 == null) {
+            return 1;
+        }else if(mv1.delta_unsat_c < mv2.delta_unsat_c){
+            return 1;
+        }else if(mv1.delta_unsat_c > mv2.delta_unsat_c){
+            return -1;
+        }else{
+            return 0;
+        }
+    }
 }

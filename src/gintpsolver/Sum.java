@@ -56,6 +56,24 @@ public class Sum extends Expression {
         return value;
     }
 
+    @Override
+    protected Move find_move(int delta_dir) {
+        Move best_mv = null;
+        int same_count = 0;
+        for(Map.Entry<Expression, Double> entry : exp_elems.entrySet()){
+            Move mv = entry.getKey().find_move(
+                    entry.getValue() * delta_dir > 0 ? 1 : -1
+            );
+            int cmp = Move.CompareMove(best_mv, mv);
+            if(cmp < 0){
+                best_mv = mv;
+                same_count = 1;
+            }else if(cmp == 0 && solver.rand.nextInt(++same_count)==0){
+                best_mv = mv;
+            }
+        }
+        return best_mv;
+    }
 
 
     @Override
